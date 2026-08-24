@@ -1,5 +1,5 @@
-import { Fmi_GetDealApprovalPreviewService } from '../generated/services/Fmi_GetDealApprovalPreviewService'
 import { Fmi_SubmitDealApprovalService } from '../generated/services/Fmi_SubmitDealApprovalService'
+import { getClientDealApprovalPreview } from './clientDealApprovalPreview'
 
 export interface DealPreviewItem {
   opportunityItemId?: string
@@ -35,17 +35,6 @@ export interface DealApprovalSubmissionResult {
 
 function asString(value: unknown): string {
   return typeof value === 'string' ? value : ''
-}
-
-function asNumber(value: unknown): number | null {
-  return typeof value === 'number' && Number.isFinite(value) ? value : null
-}
-
-function asBoolean(value: unknown): boolean | undefined {
-  if (typeof value === 'boolean') return value
-  if (typeof value === 'string' && value.toLowerCase() === 'true') return true
-  if (typeof value === 'string' && value.toLowerCase() === 'false') return false
-  return undefined
 }
 
 function normalizeGuid(value: unknown): string {
@@ -92,61 +81,13 @@ export function extractApiMessage(value: unknown): string {
   return normalized
 }
 
-function mapItem(record: Record<string, unknown>): DealPreviewItem {
-  return {
-    opportunityItemId: normalizeGuid(parseProperty(record, ['opportunityItemId', 'opportunityitemid', 'opportunity_item_id'], asString)) || undefined,
-    title: parseProperty(record, ['title', 'Title'], asString) || undefined,
-    territory: parseProperty(record, ['territory', 'Territory'], asString) || undefined,
-    businessWrittenGroup: parseProperty(record, ['businessWrittenGroup', 'businesswrittenGroup', 'businessWrittenGroupName', 'businesswrittengroup'], asString) || null,
-    businessWrittenYear: parseProperty(record, ['businessWrittenYear', 'businesswrittenYear', 'businessWrittenYearName', 'businesswrittenyear'], asString) || undefined,
-    sale: asNumber(parseProperty(record, ['sale', 'Sale'], (value) => value)),
-    budget: asNumber(parseProperty(record, ['budget', 'Budget'], (value) => value)),
-    fc1: asNumber(parseProperty(record, ['fc1', 'FC1'], (value) => value)),
-    fc2: asNumber(parseProperty(record, ['fc2', 'FC2'], (value) => value)),
-    fc3: asNumber(parseProperty(record, ['fc3', 'FC3'], (value) => value)),
-    latestForecast: asNumber(parseProperty(record, ['latestForecast', 'latestforecast'], (value) => value)),
-    latestForecastType: parseProperty(record, ['latestForecastType', 'latestforecasttype'], asString) || null,
-    varianceToForecast: asNumber(parseProperty(record, ['varianceToForecast', 'variancetoforecast'], (value) => value)),
-    varianceToBudget: asNumber(parseProperty(record, ['varianceToBudget', 'variancetobudget'], (value) => value)),
-    belowForecast: asBoolean(parseProperty(record, ['belowForecast', 'belowforecast'], (value) => value)),
-    financialComparisonAvailable: asBoolean(parseProperty(record, ['financialComparisonAvailable', 'financialcomparisonavailable'], (value) => value)),
-    financialWarning: parseProperty(record, ['financialWarning', 'financialwarning'], asString) || null,
-    includeInVariance: asBoolean(parseProperty(record, ['includeInVariance', 'includeinvariance'], (value) => value)),
-  }
-}
-
-function parsePreviewJson(value: unknown): DealApprovalPreview {
-  if (!value || typeof value !== 'object') {
-    throw new Error('The preview payload could not be parsed.')
-  }
-  const root = value as Record<string, unknown>
-  const rawText = parseProperty(root, ['PreviewJson', 'previewJson', 'previewjson'], asString) ?? ''
-  if (!rawText.trim()) {
-    throw new Error('The preview payload was empty.')
-  }
-  const parsed = JSON.parse(rawText) as Record<string, unknown>
-  const items = Array.isArray(parsed.items) ? parsed.items.map((entry) => mapItem((entry as Record<string, unknown>) ?? {})) : []
-  return {
-    opportunityId: normalizeGuid(parseProperty(parsed, ['opportunityId', 'opportunityid'], asString)) || undefined,
-    opportunityName: parseProperty(parsed, ['opportunityName', 'opportunityname'], asString) || undefined,
-    items,
-  }
-}
-
 export async function getDealApprovalPreview(opportunityId: string): Promise<DealApprovalPreview> {
   const normalizedId = opportunityId.trim()
   if (!isGuid(normalizedId)) {
     throw new Error('This page must be opened from an Opportunity record. No valid Opportunity was supplied.')
   }
 
-  const result = await Fmi_GetDealApprovalPreviewService.fmi_GetDealApprovalPreview(normalizedId)
-  console.info('[DealApprovalCentre] preview API result', result)
-  if (!result.success) {
-    const message = extractApiMessage(result.error)
-    throw new Error(message || 'The Opportunity could not be loaded.')
-  }
-
-  const preview = parsePreviewJson(result.data)
+  const preview = await getClientDealApprovalPreview(normalizedId)
   if (preview.items.length === 0) {
     throw new Error('The Opportunity contains no items to preview.')
   }
