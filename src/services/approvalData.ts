@@ -37,7 +37,16 @@ export interface ApprovalDetail extends Fmi_dealapprovals {
   salesExecutiveName: string
 }
 
-export type DealContentItem = Fmi_dealapprovalitems & { fmi_licensestartdate?: string; fmi_licenseenddate?: string; fmi_includeinvariances?: boolean }
+export interface BudgetHistoryEntry {
+  businessWrittenYearId: string
+  businessWrittenYearName: string
+  currentYearBudget: number | null
+  fc1: number | null
+  fc2: number | null
+  fc3: number | null
+}
+
+export type DealContentItem = Fmi_dealapprovalitems & { fmi_licensestartdate?: string; fmi_licenseenddate?: string; fmi_includeinvariances?: boolean; budgetHistory?: BudgetHistoryEntry[] }
 
 export type ApprovalDecision = 'approve' | 'reject'
 
@@ -97,6 +106,124 @@ function mapItemLabels(record: Fmi_dealapprovalitems): Fmi_dealapprovalitems {
 
 type LookupRow = Record<string, unknown>
 type LookupService = (options: { select: string[]; filter: string }) => Promise<{ success: boolean; data: LookupRow[] }>
+type XrmWebApi = { retrieveMultipleRecords: (entityLogicalName: string, options?: string, maxPageSize?: number) => Promise<{ entities: Record<string, unknown>[] }> }
+
+function getXrmWebApi(): XrmWebApi | null {
+  const current = window as Window & { Xrm?: { WebApi?: XrmWebApi } }
+  if (current.Xrm?.WebApi) return current.Xrm.WebApi
+  try {
+    const parentWindow = window.parent as Window & { Xrm?: { WebApi?: XrmWebApi } }
+    return parentWindow.Xrm?.WebApi ?? null
+  } catch {
+    return null
+  }
+}
+
+function yearNumber(value: string | undefined): number | null {
+  const match = value?.match(/(?:FY)?(\d{4})/i)
+  if (!match) return null
+  const parsed = Number(match[1])
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function hasMeaningfulBudgetValue(entry: BudgetHistoryEntry): boolean {
+  return [entry.currentYearBudget, entry.fc1, entry.fc2, entry.fc3].some((value) => value !== null && value !== 0)
+}
+
+function formattedAlias(record: Record<string, unknown>, field: string): string {
+  return asString(record[`${field}@OData.Community.Display.V1.FormattedValue`])
+}
+
+async function getBusinessWrittenTerritories(ids: string[]): Promise<Map<string, string>> {
+  const uniqueIds = [...new Set(ids.map(normalizeGuid).filter(Boolean))]
+  if (uniqueIds.length === 0) return new Map()
+  const filter = uniqueIds.map((id) => `fmi_targetterritoryid eq ${id}`).join(' or ')
+  const result = await Fmi_targetterritoriesService.getAll({ select: ['fmi_targetterritoryid', '_fmi_businesswrittenterritory_value'], filter })
+  if (!result.success) throw new Error('Business Written Territory mappings could not be loaded.')
+  return new Map((result.data ?? []).map((row) => [normalizeGuid(row.fmi_targetterritoryid), normalizeGuid(row._fmi_businesswrittenterritory_value)]))
+}
+
+async function getBudgetHistory(items: Fmi_dealapprovalitems[]): Promise<Map<string, BudgetHistoryEntry[]>> {
+  const webApi = getXrmWebApi()
+  if (!webApi) return new Map()
+
+  const itemRows = items.map((item) => {
+    const raw = item as unknown as Record<string, unknown>
+    return {
+      itemId: item.fmi_dealapprovalitemid,
+      businessWrittenGroupId: normalizeGuid(raw._fmi_businesswrittengroup_value),
+      targetTerritoryId: normalizeGuid(raw._fmi_targetterritory_value),
+      businessWrittenYearId: normalizeGuid(raw._fmi_businesswrittenyear_value),
+      businessWrittenYearName: item.fmi_businesswrittenyearname ?? formattedValue(raw, '_fmi_businesswrittenyear_value'),
+    }
+  })
+  const businessWrittenTerritories = await getBusinessWrittenTerritories(itemRows.map((item) => item.targetTerritoryId))
+  const combinations = new Map<string, { businessWrittenGroupId: string; businessWrittenTerritoryId: string }>()
+
+  for (const item of itemRows) {
+    const businessWrittenTerritoryId = businessWrittenTerritories.get(item.targetTerritoryId)
+    if (!item.businessWrittenGroupId || !businessWrittenTerritoryId) continue
+    combinations.set(`${item.businessWrittenGroupId}|${businessWrittenTerritoryId}`, { businessWrittenGroupId: item.businessWrittenGroupId, businessWrittenTerritoryId })
+  }
+
+  const combinationRows = [...combinations.values()]
+  if (combinationRows.length === 0) return new Map()
+
+  const groupValues = [...new Set(combinationRows.map((row) => row.businessWrittenGroupId))].map((id) => `<value>${id}</value>`).join('')
+  const territoryValues = [...new Set(combinationRows.map((row) => row.businessWrittenTerritoryId))].map((id) => `<value>${id}</value>`).join('')
+  const fetchXml = `
+    <fetch>
+      <entity name='goal'>
+        <attribute name='goalid' />
+        <attribute name='fmi_businesswrittengroup' />
+        <attribute name='fmi_bwterritory' />
+        <attribute name='fmi_businesswrittenyear' />
+        <attribute name='fmi_currentyearbudget' />
+        <attribute name='fmi_fc1' />
+        <attribute name='fmi_fc2' />
+        <attribute name='fmi_fc3' />
+        <filter type='and'>
+          <condition attribute='fmi_businesswrittengroup' operator='in'>${groupValues}</condition>
+          <condition attribute='fmi_bwterritory' operator='in'>${territoryValues}</condition>
+        </filter>
+      </entity>
+    </fetch>`
+  const result = await webApi.retrieveMultipleRecords('goal', `?fetchXml=${encodeURIComponent(fetchXml)}`)
+  const goalsByCombination = new Map<string, BudgetHistoryEntry[]>()
+
+  for (const goal of result.entities ?? []) {
+    const key = `${normalizeGuid(goal._fmi_businesswrittengroup_value)}|${normalizeGuid(goal._fmi_bwterritory_value)}`
+    const entry: BudgetHistoryEntry = {
+      businessWrittenYearId: normalizeGuid(goal._fmi_businesswrittenyear_value),
+      businessWrittenYearName: formattedAlias(goal, '_fmi_businesswrittenyear_value'),
+      currentYearBudget: asNullableNumber(goal.fmi_currentyearbudget),
+      fc1: asNullableNumber(goal.fmi_fc1),
+      fc2: asNullableNumber(goal.fmi_fc2),
+      fc3: asNullableNumber(goal.fmi_fc3),
+    }
+    if (!hasMeaningfulBudgetValue(entry)) continue
+    const existing = goalsByCombination.get(key) ?? []
+    existing.push(entry)
+    goalsByCombination.set(key, existing)
+  }
+
+  const historyByItemId = new Map<string, BudgetHistoryEntry[]>()
+  for (const item of itemRows) {
+    const businessWrittenTerritoryId = businessWrittenTerritories.get(item.targetTerritoryId)
+    if (!businessWrittenTerritoryId) continue
+    const currentYear = yearNumber(item.businessWrittenYearName)
+    const history = (goalsByCombination.get(`${item.businessWrittenGroupId}|${businessWrittenTerritoryId}`) ?? [])
+      .filter((entry) => entry.businessWrittenYearId !== item.businessWrittenYearId)
+      .filter((entry) => {
+        const entryYear = yearNumber(entry.businessWrittenYearName)
+        return currentYear === null || entryYear === null ? true : entryYear < currentYear
+      })
+      .sort((left, right) => (yearNumber(right.businessWrittenYearName) ?? 0) - (yearNumber(left.businessWrittenYearName) ?? 0))
+    if (history.length > 0) historyByItemId.set(item.itemId, history)
+  }
+
+  return historyByItemId
+}
 
 async function getLookupNames(service: LookupService, idField: string, nameField: string, ids: string[]): Promise<Map<string, string>> {
   const uniqueIds = [...new Set(ids.map(normalizeGuid).filter(Boolean))]
@@ -146,6 +273,10 @@ async function resolveDetailLookups(approval: Fmi_dealapprovals, items: Fmi_deal
   const itemRaw = items.map((item) => item as unknown as Record<string, unknown>)
   const licenceDates = await getLicenceDates(itemRaw.map((item) => asString(item._fmi_opportunityitem_value)))
   const varianceFlags = await getVarianceFlags(itemRaw.map((item) => asString(item._fmi_businesswrittengroup_value)))
+  const budgetHistory = await getBudgetHistory(items).catch((error: unknown) => {
+    console.warn('[DealApprovalCentre] Budget history could not be loaded', error)
+    return new Map<string, BudgetHistoryEntry[]>()
+  })
   const userIds = [approvalRaw._fmi_approver_value, approvalRaw._fmi_requestedby_value].map(asString)
   const [companies, opportunityRows, users, content, territories, years] = await Promise.all([
     getLookupNames(AccountsService.getAll as unknown as LookupService, 'accountid', 'name', [asString(approvalRaw._fmi_submittedcompany_value)]),
@@ -167,7 +298,7 @@ async function resolveDetailLookups(approval: Fmi_dealapprovals, items: Fmi_deal
       const raw = item as unknown as Record<string, unknown>
       const dates = licenceDates.get(normalizeGuid(raw._fmi_opportunityitem_value))
       const includeInVariances = varianceFlags.get(normalizeGuid(raw._fmi_businesswrittengroup_value))
-      return { ...item, fmi_licensestartdate: dates?.start, fmi_licenseenddate: dates?.end, fmi_includeinvariances: includeInVariances, fmi_contentname: content.get(normalizeGuid(raw._fmi_content_value)) ?? item.fmi_contentname, fmi_targetterritoryname: territories.get(normalizeGuid(raw._fmi_targetterritory_value)) ?? item.fmi_targetterritoryname, fmi_businesswrittenyearname: years.get(normalizeGuid(raw._fmi_businesswrittenyear_value)) ?? item.fmi_businesswrittenyearname }
+      return { ...item, fmi_licensestartdate: dates?.start, fmi_licenseenddate: dates?.end, fmi_includeinvariances: includeInVariances, budgetHistory: budgetHistory.get(item.fmi_dealapprovalitemid) ?? [], fmi_contentname: content.get(normalizeGuid(raw._fmi_content_value)) ?? item.fmi_contentname, fmi_targetterritoryname: territories.get(normalizeGuid(raw._fmi_targetterritory_value)) ?? item.fmi_targetterritoryname, fmi_businesswrittenyearname: years.get(normalizeGuid(raw._fmi_businesswrittenyear_value)) ?? item.fmi_businesswrittenyearname }
     }),
   }
 }

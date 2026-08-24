@@ -17,6 +17,7 @@ export function ApprovalDetailPage() {
   const [itemsExpanded, setItemsExpanded] = useState(false)
   const [commentSectionOpen, setCommentSectionOpen] = useState(false)
   const [itemsSectionOpen, setItemsSectionOpen] = useState(false)
+  const [expandedHistory, setExpandedHistory] = useState<Record<string, boolean>>({})
   const commentRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -164,7 +165,14 @@ export function ApprovalDetailPage() {
                       <div className="item-card-title"><strong>{item.fmi_contentname || 'Content unavailable'}</strong><span className="item-bwg">BWG {item.fmi_businesswrittengroupname || '-'}</span></div>
                       <p>{item.fmi_targetterritoryname || '-'} · BWY {item.fmi_businesswrittenyearname || '-'} · Licence {formatDateOnly(item.fmi_licensestartdate)} – {formatDateOnly(item.fmi_licenseenddate)}</p>
                     </div>
-                    <span>{item.fmi_belowforecast ? 'Below forecast' : 'On track'}</span>
+                    <div className="item-card-actions">
+                      <span>{item.fmi_belowforecast ? 'Below forecast' : 'On track'}</span>
+                      {(item.budgetHistory?.length ?? 0) > 0 && (
+                        <button type="button" className="budget-history-toggle" onClick={() => setExpandedHistory((current) => ({ ...current, [item.fmi_dealapprovalitemid]: !current[item.fmi_dealapprovalitemid] }))}>
+                          {expandedHistory[item.fmi_dealapprovalitemid] ? 'Hide history' : 'History'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="item-card-grid">
                     <div><dt>Sale Value</dt><dd>{formatUsd(item.fmi_submittedsalevalue)}</dd></div>
@@ -174,6 +182,26 @@ export function ApprovalDetailPage() {
                     <div><dt>Variance to forecast</dt><dd>{item.fmi_includeinvariances === false ? 'N/A' : formatUsd(item.fmi_variancetoforecast)}</dd></div>
                     <div><dt>Variance to budget</dt><dd>{item.fmi_includeinvariances === false ? 'N/A' : formatUsd(item.fmi_variancetobudget)}</dd></div>
                   </div>
+                  {expandedHistory[item.fmi_dealapprovalitemid] && (item.budgetHistory?.length ?? 0) > 0 && (
+                    <div className="budget-history-panel">
+                      <div className="budget-history-heading">
+                        <strong>Budget history</strong>
+                        <span>Same BWG and territory in previous years</span>
+                      </div>
+                      <div className="budget-history-table">
+                        <div className="budget-history-row budget-history-header"><span>BWY</span><span>Budget</span><span>FC1</span><span>FC2</span><span>FC3</span></div>
+                        {item.budgetHistory?.map((entry) => (
+                          <div className="budget-history-row" key={`${item.fmi_dealapprovalitemid}-${entry.businessWrittenYearId}`}>
+                            <span>{entry.businessWrittenYearName || '-'}</span>
+                            <span>{formatUsd(entry.currentYearBudget)}</span>
+                            <span>{formatUsd(entry.fc1)}</span>
+                            <span>{formatUsd(entry.fc2)}</span>
+                            <span>{formatUsd(entry.fc3)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </article>
               ))}
             </div>
