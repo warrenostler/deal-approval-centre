@@ -63,18 +63,21 @@ export function RequestDealApprovalPage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
   useEffect(() => {
-    const runtimeContext = (window as Window & { __dacContext?: { opportunityId?: string | null } }).__dacContext
-    const suppliedId = searchParams.get('opportunityId')?.trim() || runtimeContext?.opportunityId?.trim() || ''
-    if (!suppliedId || !isGuid(suppliedId)) {
-      setError('This page must be opened from an Opportunity record. No valid Opportunity was supplied.')
-      setLoading(false)
-      return
-    }
-
-    setOpportunityId(suppliedId)
-
     let active = true
-    getDealApprovalPreview(suppliedId)
+
+    async function loadPreview() {
+      const runtimeWindow = window as Window & { __dacContext?: { opportunityId?: string | null }; __dacOpportunityIdPromise?: Promise<string | null> }
+      const runtimeContext = runtimeWindow.__dacContext
+      const suppliedId = searchParams.get('opportunityId')?.trim() || runtimeContext?.opportunityId?.trim() || (await runtimeWindow.__dacOpportunityIdPromise)?.trim() || ''
+      if (!active) return
+      if (!suppliedId || !isGuid(suppliedId)) {
+        setError('This page must be opened from an Opportunity record. No valid Opportunity was supplied.')
+        setLoading(false)
+        return
+      }
+
+      setOpportunityId(suppliedId)
+      getDealApprovalPreview(suppliedId)
       .then((preview) => {
         if (!active) return
         setOpportunityName(preview.opportunityName || 'Opportunity')
@@ -88,6 +91,9 @@ export function RequestDealApprovalPage() {
       .finally(() => {
         if (active) setLoading(false)
       })
+    }
+
+    void loadPreview()
 
     return () => {
       active = false

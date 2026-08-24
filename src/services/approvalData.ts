@@ -145,7 +145,10 @@ async function getBusinessWrittenTerritories(ids: string[]): Promise<Map<string,
 
 async function getBudgetHistory(items: Fmi_dealapprovalitems[]): Promise<Map<string, BudgetHistoryEntry[]>> {
   const webApi = getXrmWebApi()
-  if (!webApi) return new Map()
+  if (!webApi) {
+    console.info('[DealApprovalCentre] Budget history skipped because Xrm.WebApi is unavailable')
+    return new Map()
+  }
 
   const itemRows = items.map((item) => {
     const raw = item as unknown as Record<string, unknown>
@@ -222,6 +225,8 @@ async function getBudgetHistory(items: Fmi_dealapprovalitems[]): Promise<Map<str
     if (history.length > 0) historyByItemId.set(item.itemId, history)
   }
 
+  console.info('[DealApprovalCentre] Budget history loaded', { itemCount: historyByItemId.size })
+
   return historyByItemId
 }
 
@@ -273,10 +278,6 @@ async function resolveDetailLookups(approval: Fmi_dealapprovals, items: Fmi_deal
   const itemRaw = items.map((item) => item as unknown as Record<string, unknown>)
   const licenceDates = await getLicenceDates(itemRaw.map((item) => asString(item._fmi_opportunityitem_value)))
   const varianceFlags = await getVarianceFlags(itemRaw.map((item) => asString(item._fmi_businesswrittengroup_value)))
-  const budgetHistory = await getBudgetHistory(items).catch((error: unknown) => {
-    console.warn('[DealApprovalCentre] Budget history could not be loaded', error)
-    return new Map<string, BudgetHistoryEntry[]>()
-  })
   const userIds = [approvalRaw._fmi_approver_value, approvalRaw._fmi_requestedby_value].map(asString)
   const [companies, opportunityRows, users, content, territories, years] = await Promise.all([
     getLookupNames(AccountsService.getAll as unknown as LookupService, 'accountid', 'name', [asString(approvalRaw._fmi_submittedcompany_value)]),
@@ -292,13 +293,21 @@ async function resolveDetailLookups(approval: Fmi_dealapprovals, items: Fmi_deal
   const requestedById = normalizeGuid(approvalRaw._fmi_requestedby_value)
   const opportunityRow = opportunityRows.get(opportunityId)
   const salesExecutiveNames = await getLookupNames(SystemusersService.getAll as unknown as LookupService, 'systemuserid', 'fullname', opportunityRow?.salesExecutiveId ? [opportunityRow.salesExecutiveId] : [])
+  const labelledItems = items.map((item) => {
+    const raw = item as unknown as Record<string, unknown>
+    return { ...item, fmi_contentname: content.get(normalizeGuid(raw._fmi_content_value)) ?? item.fmi_contentname, fmi_targetterritoryname: territories.get(normalizeGuid(raw._fmi_targetterritory_value)) ?? item.fmi_targetterritoryname, fmi_businesswrittenyearname: years.get(normalizeGuid(raw._fmi_businesswrittenyear_value)) ?? item.fmi_businesswrittenyearname }
+  })
+  const budgetHistory = await getBudgetHistory(labelledItems).catch((error: unknown) => {
+    console.warn('[DealApprovalCentre] Budget history could not be loaded', error)
+    return new Map<string, BudgetHistoryEntry[]>()
+  })
   return {
     approval: { ...approval, fmi_submittedcompanyname: companies.get(companyId) ?? approval.fmi_submittedcompanyname, fmi_opportunityname: opportunityRow?.name ?? approval.fmi_opportunityname, fmi_approvername: users.get(approverId) ?? approval.fmi_approvername, fmi_requestedbyname: users.get(requestedById) ?? approval.fmi_requestedbyname, salesExecutiveName: salesExecutiveNames.get(opportunityRow?.salesExecutiveId ?? '') ?? 'Unassigned' },
-    items: items.map((item) => {
+    items: labelledItems.map((item) => {
       const raw = item as unknown as Record<string, unknown>
       const dates = licenceDates.get(normalizeGuid(raw._fmi_opportunityitem_value))
       const includeInVariances = varianceFlags.get(normalizeGuid(raw._fmi_businesswrittengroup_value))
-      return { ...item, fmi_licensestartdate: dates?.start, fmi_licenseenddate: dates?.end, fmi_includeinvariances: includeInVariances, budgetHistory: budgetHistory.get(item.fmi_dealapprovalitemid) ?? [], fmi_contentname: content.get(normalizeGuid(raw._fmi_content_value)) ?? item.fmi_contentname, fmi_targetterritoryname: territories.get(normalizeGuid(raw._fmi_targetterritory_value)) ?? item.fmi_targetterritoryname, fmi_businesswrittenyearname: years.get(normalizeGuid(raw._fmi_businesswrittenyear_value)) ?? item.fmi_businesswrittenyearname }
+      return { ...item, fmi_licensestartdate: dates?.start, fmi_licenseenddate: dates?.end, fmi_includeinvariances: includeInVariances, budgetHistory: budgetHistory.get(item.fmi_dealapprovalitemid) ?? [] }
     }),
   }
 }

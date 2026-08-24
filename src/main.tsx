@@ -11,6 +11,12 @@ type RuntimeContext = {
   opportunityId: string | null
 }
 
+type RuntimeWindow = Window & {
+  __boot?: Record<string, unknown>
+  __dacContext?: RuntimeContext
+  __dacOpportunityIdPromise?: Promise<string | null>
+}
+
 function isGuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
 }
@@ -70,8 +76,10 @@ export const opportunityIdPromise = new Promise<string | null>((resolve) => {
   window.setTimeout(() => finish(null), 15000)
 })
 
+;(window as RuntimeWindow).__dacOpportunityIdPromise = opportunityIdPromise
+
 opportunityIdPromise.then((opportunityId) => {
-  ;(window as Window & { __dacContext?: RuntimeContext }).__dacContext = { opportunityId }
+  ;(window as RuntimeWindow).__dacContext = { opportunityId }
   const boot = {
     buildId: BUILD_ID,
     href: window.location.href,
@@ -82,18 +90,11 @@ opportunityIdPromise.then((opportunityId) => {
     windowName: window.name,
     opportunityId,
   }
-  ;(window as Window & { __boot?: typeof boot }).__boot = boot
+  ;(window as RuntimeWindow).__boot = boot
   console.info('[DealApprovalCentre] boot', boot)
 })
 
 async function start() {
-  const opportunityId = await opportunityIdPromise
-  ;(window as Window & { __dacContext?: RuntimeContext }).__dacContext = { opportunityId }
-  if (opportunityId && !new URLSearchParams(window.location.search).get('opportunityId')) {
-    const query = new URLSearchParams(window.location.search)
-    query.set('opportunityId', opportunityId)
-    window.history.replaceState(null, '', `${window.location.pathname}?${query.toString()}${window.location.hash}`)
-  }
   const { default: App } = await import('./App.tsx')
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
@@ -101,5 +102,13 @@ async function start() {
     </StrictMode>,
   )
 }
+
+opportunityIdPromise.then((opportunityId) => {
+  if (opportunityId && !new URLSearchParams(window.location.search).get('opportunityId')) {
+    const query = new URLSearchParams(window.location.search)
+    query.set('opportunityId', opportunityId)
+    window.history.replaceState(null, '', `${window.location.pathname}?${query.toString()}${window.location.hash}`)
+  }
+})
 
 void start()
