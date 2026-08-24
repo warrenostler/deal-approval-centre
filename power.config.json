@@ -63,6 +63,11 @@
           "entitySetName": "fmi_opportunityitems",
           "logicalName": "fmi_opportunityitem",
           "isHidden": false
+        },
+        "businesswrittengroups": {
+          "entitySetName": "fmi_businesswrittengroups",
+          "logicalName": "fmi_businesswrittengroup",
+          "isHidden": false
         }
       },
       "environmentVariableName": ""

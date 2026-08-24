@@ -171,8 +171,8 @@ export function ApprovalDetailPage() {
                     <div><dt>Submitted budget</dt><dd>{formatUsd(item.fmi_submittedbudgetvalue)}</dd></div>
                     <div><dt>Latest forecast</dt><dd>{formatUsd(item.fmi_submittedlatestforecast)}</dd></div>
                     <div><dt>Forecast type</dt><dd>{item.fmi_latestforecasttypename || '-'}</dd></div>
-                    <div><dt>Variance to forecast</dt><dd>{formatUsd(item.fmi_variancetoforecast)}</dd></div>
-                    <div><dt>Variance to budget</dt><dd>{formatUsd(item.fmi_variancetobudget)}</dd></div>
+                    <div><dt>Variance to forecast</dt><dd>{item.fmi_includeinvariances === false ? 'N/A' : formatUsd(item.fmi_variancetoforecast)}</dd></div>
+                    <div><dt>Variance to budget</dt><dd>{item.fmi_includeinvariances === false ? 'N/A' : formatUsd(item.fmi_variancetobudget)}</dd></div>
                   </div>
                 </article>
               ))}

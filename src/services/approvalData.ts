@@ -7,6 +7,7 @@ import { SystemusersService } from '../generated/services/SystemusersService'
 import { Fmi_contentsService } from '../generated/services/Fmi_contentsService'
 import { Fmi_targetterritoriesService } from '../generated/services/Fmi_targetterritoriesService'
 import { Fmi_businesswrittenyearsService } from '../generated/services/Fmi_businesswrittenyearsService'
+import { Fmi_businesswrittengroupsService } from '../generated/services/Fmi_businesswrittengroupsService'
 import { Fmi_ProcessDealApprovalDecisionService } from '../generated/services/Fmi_ProcessDealApprovalDecisionService'
 import { Fmi_opportunityitemsService } from '../generated/services/Fmi_opportunityitemsService'
 import type { Fmi_dealapprovalitems } from '../generated/models/Fmi_dealapprovalitemsModel'
@@ -36,7 +37,7 @@ export interface ApprovalDetail extends Fmi_dealapprovals {
   salesExecutiveName: string
 }
 
-export type DealContentItem = Fmi_dealapprovalitems & { fmi_licensestartdate?: string; fmi_licenseenddate?: string }
+export type DealContentItem = Fmi_dealapprovalitems & { fmi_licensestartdate?: string; fmi_licenseenddate?: string; fmi_includeinvariances?: boolean }
 
 export type ApprovalDecision = 'approve' | 'reject'
 
@@ -124,6 +125,15 @@ async function getLicenceDates(ids: string[]): Promise<Map<string, { start?: str
   return new Map(result.data.map((row) => [normalizeGuid(row.fmi_opportunityitemid), { start: asString(row.fmi_licensestartdate) || undefined, end: asString(row.fmi_licenseenddate) || undefined }]))
 }
 
+async function getVarianceFlags(ids: string[]): Promise<Map<string, boolean>> {
+  const uniqueIds = [...new Set(ids.map(normalizeGuid).filter(Boolean))]
+  if (uniqueIds.length === 0) return new Map()
+  const filter = uniqueIds.map((id) => `fmi_businesswrittengroupid eq ${id}`).join(' or ')
+  const result = await Fmi_businesswrittengroupsService.getAll({ select: ['fmi_businesswrittengroupid', 'fmi_includeinvariances'], filter })
+  if (!result.success) throw new Error('Business Written Group variance settings could not be loaded.')
+  return new Map((result.data ?? []).map((row) => [normalizeGuid(row.fmi_businesswrittengroupid), row.fmi_includeinvariances !== false]))
+}
+
 async function resolveQueueSalesExecutives(approvals: ApprovalSummary[]): Promise<ApprovalSummary[]> {
   const opportunities = await getOpportunityRows(approvals.map((approval) => approval.opportunityId))
   const salesExecutiveIds = [...new Set([...opportunities.values()].map((row) => row.salesExecutiveId).filter(Boolean))]
@@ -135,6 +145,7 @@ async function resolveDetailLookups(approval: Fmi_dealapprovals, items: Fmi_deal
   const approvalRaw = approval as unknown as Record<string, unknown>
   const itemRaw = items.map((item) => item as unknown as Record<string, unknown>)
   const licenceDates = await getLicenceDates(itemRaw.map((item) => asString(item._fmi_opportunityitem_value)))
+  const varianceFlags = await getVarianceFlags(itemRaw.map((item) => asString(item._fmi_businesswrittengroup_value)))
   const userIds = [approvalRaw._fmi_approver_value, approvalRaw._fmi_requestedby_value].map(asString)
   const [companies, opportunityRows, users, content, territories, years] = await Promise.all([
     getLookupNames(AccountsService.getAll as unknown as LookupService, 'accountid', 'name', [asString(approvalRaw._fmi_submittedcompany_value)]),
@@ -155,7 +166,8 @@ async function resolveDetailLookups(approval: Fmi_dealapprovals, items: Fmi_deal
     items: items.map((item) => {
       const raw = item as unknown as Record<string, unknown>
       const dates = licenceDates.get(normalizeGuid(raw._fmi_opportunityitem_value))
-      return { ...item, fmi_licensestartdate: dates?.start, fmi_licenseenddate: dates?.end, fmi_contentname: content.get(normalizeGuid(raw._fmi_content_value)) ?? item.fmi_contentname, fmi_targetterritoryname: territories.get(normalizeGuid(raw._fmi_targetterritory_value)) ?? item.fmi_targetterritoryname, fmi_businesswrittenyearname: years.get(normalizeGuid(raw._fmi_businesswrittenyear_value)) ?? item.fmi_businesswrittenyearname }
+      const includeInVariances = varianceFlags.get(normalizeGuid(raw._fmi_businesswrittengroup_value))
+      return { ...item, fmi_licensestartdate: dates?.start, fmi_licenseenddate: dates?.end, fmi_includeinvariances: includeInVariances, fmi_contentname: content.get(normalizeGuid(raw._fmi_content_value)) ?? item.fmi_contentname, fmi_targetterritoryname: territories.get(normalizeGuid(raw._fmi_targetterritory_value)) ?? item.fmi_targetterritoryname, fmi_businesswrittenyearname: years.get(normalizeGuid(raw._fmi_businesswrittenyear_value)) ?? item.fmi_businesswrittenyearname }
     }),
   }
 }

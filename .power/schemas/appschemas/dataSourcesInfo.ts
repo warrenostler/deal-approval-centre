@@ -5,10 +5,10 @@
  */
 
 export const dataSourcesInfo = {
-  "accounts": {
+  "fmi_businesswrittengroups": {
     "tableId": "",
     "version": "",
-    "primaryKey": "accountid",
+    "primaryKey": "fmi_businesswrittengroupid",
     "dataSourceType": "Dataverse",
     "apis": {}
   },
@@ -16,6 +16,13 @@ export const dataSourcesInfo = {
     "tableId": "",
     "version": "",
     "primaryKey": "fmi_businesswrittenyearid",
+    "dataSourceType": "Dataverse",
+    "apis": {}
+  },
+  "accounts": {
+    "tableId": "",
+    "version": "",
+    "primaryKey": "accountid",
     "dataSourceType": "Dataverse",
     "apis": {}
   },
@@ -58,13 +65,6 @@ export const dataSourcesInfo = {
       }
     }
   },
-  "fmi_opportunityitems": {
-    "tableId": "",
-    "version": "",
-    "primaryKey": "fmi_opportunityitemid",
-    "dataSourceType": "Dataverse",
-    "apis": {}
-  },
   "fmi_processdealapprovaldecision": {
     "tableId": "",
     "version": "",
@@ -79,8 +79,7 @@ export const dataSourcesInfo = {
             "name": "fmi_DealApprovalId",
             "in": "body",
             "required": true,
-            "type": "string",
-            "format": "guid"
+            "type": "string"
           },
           {
             "name": "fmi_Decision",
@@ -103,17 +102,24 @@ export const dataSourcesInfo = {
       }
     }
   },
-  "fmi_targetterritories": {
-    "tableId": "",
-    "version": "",
-    "primaryKey": "fmi_targetterritoryid",
-    "dataSourceType": "Dataverse",
-    "apis": {}
-  },
   "opportunities": {
     "tableId": "",
     "version": "",
     "primaryKey": "opportunityid",
+    "dataSourceType": "Dataverse",
+    "apis": {}
+  },
+  "fmi_opportunityitems": {
+    "tableId": "",
+    "version": "",
+    "primaryKey": "fmi_opportunityitemid",
+    "dataSourceType": "Dataverse",
+    "apis": {}
+  },
+  "fmi_targetterritories": {
+    "tableId": "",
+    "version": "",
+    "primaryKey": "fmi_targetterritoryid",
     "dataSourceType": "Dataverse",
     "apis": {}
   },
