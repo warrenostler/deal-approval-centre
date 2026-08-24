@@ -161,9 +161,8 @@ export function ApprovalDetailPage() {
                 <article className={item.fmi_belowforecast ? 'item-card below-forecast' : 'item-card'} key={item.fmi_dealapprovalitemid}>
                   <div className="item-card-heading">
                     <div>
-                      <strong>{item.fmi_contentname || 'Content unavailable'}</strong>
+                      <div className="item-card-title"><strong>{item.fmi_contentname || 'Content unavailable'}</strong><span className="item-bwg">BWG {item.fmi_businesswrittengroupname || '-'}</span></div>
                       <p>{item.fmi_targetterritoryname || '-'} · BWY {item.fmi_businesswrittenyearname || '-'} · Licence {formatDateOnly(item.fmi_licensestartdate)} – {formatDateOnly(item.fmi_licenseenddate)}</p>
-                                          <p>{item.fmi_targetterritoryname || '-'} · BWG {item.fmi_businesswrittengroupname || '-'} · BWY {item.fmi_businesswrittenyearname || '-'} · Licence {formatDateOnly(item.fmi_licensestartdate)} – {formatDateOnly(item.fmi_licenseenddate)}</p>
                     </div>
                     <span>{item.fmi_belowforecast ? 'Below forecast' : 'On track'}</span>
                   </div>

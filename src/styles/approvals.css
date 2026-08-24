@@ -124,7 +124,10 @@ h2 { margin-bottom: 4px; color: var(--dac-text); font-size: 1.3rem; font-weight:
 .item-card { padding: 15px 16px; border: 1px solid var(--dac-border); border-radius: 10px; background: var(--dac-surface); }
 .item-card.below-forecast { border-left: 4px solid var(--dac-amber-border); background: #fffaf0; }
 .item-card-heading { display: flex; justify-content: space-between; gap: 10px; color: var(--dac-text); }
+.item-card-title { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.item-bwg { padding: 4px 8px; border: 1px solid #9fc9e5; border-radius: 6px; color: #166493; background: #eef7fc; font-size: .68rem; font-weight: 800; letter-spacing: .03em; white-space: nowrap; }
 .item-card-heading span { color: var(--dac-muted); font-size: .72rem; }
+.item-card-heading .item-bwg { color: #166493; }
 .item-card-heading p { margin: 5px 0 0; color: var(--dac-muted); font-size: .8rem; font-weight: 500; }
 .item-card-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
 .item-card-grid div { display: grid; gap: 4px; min-width: 0; padding-top: 9px; border-top: 1px solid #e2ebe8; }
