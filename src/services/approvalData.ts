@@ -11,6 +11,7 @@ import { Fmi_ProcessDealApprovalDecisionService } from '../generated/services/Fm
 import { Fmi_opportunityitemsService } from '../generated/services/Fmi_opportunityitemsService'
 import type { Fmi_dealapprovalitems } from '../generated/models/Fmi_dealapprovalitemsModel'
 import type { Fmi_dealapprovals } from '../generated/models/Fmi_dealapprovalsModel'
+import type { Opportunities } from '../generated/models/OpportunitiesModel'
 
 export interface ApprovalSummary {
   dealApprovalId: string
@@ -44,8 +45,15 @@ export interface DecisionResult {
   status: number | null
 }
 
+export interface OpportunityApprovalHistory {
+  opportunity: Opportunities
+  approvals: Fmi_dealapprovals[]
+}
+
 const approvalSelect = ['fmi_dealapprovalid', '_fmi_opportunity_value', '_fmi_submittedcompany_value', '_fmi_approver_value', '_fmi_requestedby_value', 'createdon', 'fmi_submitteddealvalue', 'fmi_approvalstatus', 'fmi_requestorcomment']
 const itemSelect = ['fmi_dealapprovalitemid', '_fmi_dealapproval_value', '_fmi_content_value', '_fmi_targetterritory_value', '_fmi_businesswrittenyear_value', '_fmi_opportunityitem_value', 'fmi_submittedsalevalue', 'fmi_submittedbudgetvalue', 'fmi_submittedlatestforecast', 'fmi_latestforecasttype', 'fmi_variancetoforecast', 'fmi_variancetobudget', 'fmi_belowforecast']
+const opportunityHistorySelect = ['opportunityid', 'name', 'fmi_dpssalescontractid', 'fmi_currentapprovalstatus', '_fmi_CurrentDealApproval_value', '_parentaccountid_value']
+const historySelect = ['fmi_dealapprovalid', 'fmi_name', '_fmi_opportunity_value', 'fmi_approvalstatus', 'fmi_approvaltype', 'fmi_approvalversion', 'fmi_approvalsenton', 'fmi_decisionon', 'fmi_decisioncomments', 'fmi_requestorcomment', 'fmi_iscurrentapproval', 'fmi_reapprovalrequired', 'fmi_cancelledon', 'fmi_cancellationreason', 'createdon', '_fmi_approver_value', '_fmi_requestedby_value', '_fmi_decisionby_value', 'fmi_submitteddealvalue']
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' ? value as Record<string, unknown> : null
@@ -189,6 +197,28 @@ export async function getApprovalDetail(id: string): Promise<ApprovalDetail> {
   const mappedItems = (itemResult.data ?? []).map(mapItemLabels)
   const resolved = await resolveDetailLookups(mappedApproval, mappedItems)
   return { ...resolved.approval, items: resolved.items }
+}
+
+export async function getOpportunityApprovalHistory(contractId: string): Promise<OpportunityApprovalHistory> {
+  const normalizedContractId = contractId.trim()
+  if (!normalizedContractId) throw new Error('Enter a DPS sale contract ID.')
+  const result = await OpportunitiesService.getAll({
+    select: opportunityHistorySelect,
+    filter: `fmi_dpssalescontractid eq '${normalizedContractId.replace(/'/g, "''")}'`,
+  })
+  if (!result.success) throw new Error('The opportunity could not be searched.')
+  const opportunity = result.data?.[0]
+  if (!opportunity) throw new Error(`No opportunity was found for contract ID ${normalizedContractId}.`)
+
+  const opportunityId = normalizeGuid(opportunity.opportunityid)
+  const historyResult = await Fmi_dealapprovalsService.getAll({
+    select: historySelect,
+    filter: `_fmi_opportunity_value eq ${opportunityId}`,
+    orderBy: ['createdon desc'],
+  })
+  if (!historyResult.success) throw new Error('The approval history could not be loaded.')
+  const approvals = historyResult.data ?? []
+  return { opportunity, approvals }
 }
 
 function normalizeDecisionError(error: unknown): Error {
