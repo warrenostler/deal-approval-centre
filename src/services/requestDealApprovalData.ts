@@ -42,7 +42,10 @@ function asNumber(value: unknown): number | null {
 }
 
 function asBoolean(value: unknown): boolean | undefined {
-  return typeof value === 'boolean' ? value : undefined
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'string' && value.toLowerCase() === 'true') return true
+  if (typeof value === 'string' && value.toLowerCase() === 'false') return false
+  return undefined
 }
 
 function normalizeGuid(value: unknown): string {

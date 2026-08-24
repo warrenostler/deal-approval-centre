@@ -4,7 +4,7 @@ import './styles/tokens.css'
 import './styles/app.css'
 import './styles/approvals.css'
 
-const BUILD_ID = 'deep-link-guid-fix-2026-08-24-09'
+const BUILD_ID = 'fix-financial-na-display-2026-08-24-10'
 const HOST_ORIGIN = 'https://orgf7602101.crm11.dynamics.com'
 
 type RuntimeContext = {

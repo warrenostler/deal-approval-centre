@@ -27,8 +27,7 @@ function compareValues(left: number | string | null | undefined, right: number |
 }
 
 function getDisplayValue(item: DealPreviewItem, field: 'budget' | 'latestForecast' | 'varianceToForecast' | 'latestForecastType'): string {
-  const includeInVariance = Boolean(item.includeInVariance)
-  if (!includeInVariance) return 'N/A'
+  if (item.includeInVariance === false) return 'N/A'
 
   switch (field) {
     case 'budget': {
