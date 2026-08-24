@@ -1,4 +1,4 @@
-import { Navigate, createHashRouter } from 'react-router-dom'
+import { Navigate, createBrowserRouter } from 'react-router-dom'
 import { ApprovalCentrePage } from '../pages/ApprovalCentrePage'
 import { ApprovalDetailPage } from '../pages/ApprovalDetailPage'
 import { OpportunityApprovalHistoryPage } from '../pages/OpportunityApprovalHistoryPage'
@@ -20,8 +20,18 @@ function getOpportunityIdFromLocation(): string | null {
   return fromHash && fromHash.trim() ? fromHash.trim() : null
 }
 
+function getBootOpportunityId(): string | null {
+  const boot = (window as Window & { __boot?: { opportunityId?: string | null } }).__boot
+  return boot?.opportunityId ?? null
+}
+
+function getRuntimeOpportunityId(): string | null {
+  const context = (window as Window & { __dacContext?: { opportunityId?: string | null } }).__dacContext
+  return context?.opportunityId ?? null
+}
+
 function RootEntryPage() {
-  const opportunityId = getOpportunityIdFromLocation()
+  const opportunityId = getOpportunityIdFromLocation() ?? getRuntimeOpportunityId() ?? getBootOpportunityId()
 
   if (opportunityId) {
     return (
@@ -35,7 +45,7 @@ function RootEntryPage() {
   return <ApprovalCentrePage />
 }
 
-export const appRouter = createHashRouter([
+export const appRouter = createBrowserRouter([
   {
     path: '/',
     element: <RootEntryPage />,
@@ -52,4 +62,4 @@ export const appRouter = createHashRouter([
     path: '/request-deal-approval',
     element: <RequestDealApprovalPage />,
   },
-])
+], { basename: window.location.pathname })

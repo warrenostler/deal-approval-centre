@@ -51,7 +51,7 @@ function normalizeGuid(value: unknown): string {
 
 export function isGuid(value: string | null | undefined): boolean {
   if (!value) return false
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim())
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim())
 }
 
 function parseProperty<T>(root: Record<string, unknown>, keyCandidates: string[], transform: (value: unknown) => T): T | undefined {
@@ -137,11 +137,9 @@ export async function getDealApprovalPreview(opportunityId: string): Promise<Dea
   }
 
   const result = await Fmi_GetDealApprovalPreviewService.fmi_GetDealApprovalPreview(normalizedId)
+  console.info('[DealApprovalCentre] preview API result', result)
   if (!result.success) {
     const message = extractApiMessage(result.error)
-    if (message.toLowerCase().includes('not found') || message.toLowerCase().includes('permission') || message.toLowerCase().includes('authorized') || message.toLowerCase().includes('access')) {
-      throw new Error('The Opportunity could not be found, or you do not have permission to view it.')
-    }
     throw new Error(message || 'The Opportunity could not be loaded.')
   }
 

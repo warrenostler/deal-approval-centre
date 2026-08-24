@@ -47,6 +47,31 @@ export const dataSourcesInfo = {
     "dataSourceType": "Dataverse",
     "apis": {}
   },
+  "fmi_getdealapprovalpreview": {
+    "tableId": "",
+    "version": "",
+    "primaryKey": "",
+    "dataSourceType": "Dataverse",
+    "apis": {
+      "fmi_GetDealApprovalPreview": {
+        "path": "/api/data/v9.2/fmi_GetDealApprovalPreview",
+        "method": "POST",
+        "parameters": [
+          {
+            "name": "OpportunityId",
+            "in": "body",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responseInfo": {
+          "200": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  },
   "fmi_getpendingdealapprovals": {
     "tableId": "",
     "version": "",

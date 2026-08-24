@@ -13,11 +13,11 @@ export class Fmi_GetDealApprovalPreviewService {
   private static readonly client = getClient(dataSourcesInfo);
 
   /**
-   * @param fmi_OpportunityId type: `Guid`
+   * @param OpportunityId type: `Guid`
    */
-  public static async fmi_GetDealApprovalPreview(fmi_OpportunityId: string): Promise<IOperationResult<Record<string, unknown>>> {
-    const params: { fmi_OpportunityId: string } = { fmi_OpportunityId };
-    const result = await Fmi_GetDealApprovalPreviewService.client.executeAsync<{ fmi_OpportunityId: string }, Record<string, unknown>>(
+  public static async fmi_GetDealApprovalPreview(OpportunityId: string): Promise<IOperationResult<Record<string, unknown>>> {
+    const params: { OpportunityId: string } = { OpportunityId };
+    const result = await Fmi_GetDealApprovalPreviewService.client.executeAsync<{ OpportunityId: string }, Record<string, unknown>>(
       {
         dataverseRequest: {
           action: 'customapi',

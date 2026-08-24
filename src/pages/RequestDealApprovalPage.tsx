@@ -64,7 +64,8 @@ export function RequestDealApprovalPage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
   useEffect(() => {
-    const suppliedId = searchParams.get('opportunityId')?.trim() ?? ''
+    const runtimeContext = (window as Window & { __dacContext?: { opportunityId?: string | null } }).__dacContext
+    const suppliedId = searchParams.get('opportunityId')?.trim() || runtimeContext?.opportunityId?.trim() || ''
     if (!suppliedId || !isGuid(suppliedId)) {
       setError('This page must be opened from an Opportunity record. No valid Opportunity was supplied.')
       setLoading(false)
