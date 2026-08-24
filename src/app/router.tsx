@@ -1,7 +1,7 @@
 import { createHashRouter } from 'react-router-dom'
 import { ApprovalCentrePage } from '../pages/ApprovalCentrePage'
 import { ApprovalDetailPage } from '../pages/ApprovalDetailPage'
-import { OpportunityApprovalHistoryPage } from '../pages/OpportunityApprovalHistoryPage'
+import { RequestDealApprovalPage } from '../pages/RequestDealApprovalPage'
 
 export const appRouter = createHashRouter([
   {
@@ -13,7 +13,7 @@ export const appRouter = createHashRouter([
     element: <ApprovalDetailPage />,
   },
   {
-    path: '/opportunity-history',
-    element: <OpportunityApprovalHistoryPage />,
+    path: '/request-deal-approval',
+    element: <RequestDealApprovalPage />,
   },
 ])

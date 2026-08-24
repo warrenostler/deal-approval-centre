@@ -7,12 +7,10 @@ import { SystemusersService } from '../generated/services/SystemusersService'
 import { Fmi_contentsService } from '../generated/services/Fmi_contentsService'
 import { Fmi_targetterritoriesService } from '../generated/services/Fmi_targetterritoriesService'
 import { Fmi_businesswrittenyearsService } from '../generated/services/Fmi_businesswrittenyearsService'
-import { Fmi_businesswrittengroupsService } from '../generated/services/Fmi_businesswrittengroupsService'
 import { Fmi_ProcessDealApprovalDecisionService } from '../generated/services/Fmi_ProcessDealApprovalDecisionService'
 import { Fmi_opportunityitemsService } from '../generated/services/Fmi_opportunityitemsService'
 import type { Fmi_dealapprovalitems } from '../generated/models/Fmi_dealapprovalitemsModel'
 import type { Fmi_dealapprovals } from '../generated/models/Fmi_dealapprovalsModel'
-import type { Opportunities } from '../generated/models/OpportunitiesModel'
 
 export interface ApprovalSummary {
   dealApprovalId: string
@@ -37,7 +35,29 @@ export interface ApprovalDetail extends Fmi_dealapprovals {
   salesExecutiveName: string
 }
 
-export type DealContentItem = Fmi_dealapprovalitems & { fmi_licensestartdate?: string; fmi_licenseenddate?: string; fmi_includeinvariances?: boolean }
+export interface OpportunityApprovalHistoryItem {
+  fmi_dealapprovalid: string
+  fmi_approvalstatus?: number
+  fmi_approvaltype?: number
+  fmi_decisioncomments?: string | null
+  fmi_requestorcomment?: string | null
+  fmi_approvalversion?: number
+  fmi_submitteddealvalue?: number | null
+  createdon?: string
+  fmi_decisionon?: string | null
+  fmi_approvalsenton?: string | null
+}
+
+export interface OpportunityApprovalHistory {
+  opportunity: {
+    name?: string
+    fmi_dpssalescontractid?: string
+    fmi_currentapprovalstatus?: number
+  }
+  approvals: OpportunityApprovalHistoryItem[]
+}
+
+export type DealContentItem = Fmi_dealapprovalitems & { fmi_licensestartdate?: string; fmi_licenseenddate?: string }
 
 export type ApprovalDecision = 'approve' | 'reject'
 
@@ -46,15 +66,8 @@ export interface DecisionResult {
   status: number | null
 }
 
-export interface OpportunityApprovalHistory {
-  opportunity: Opportunities
-  approvals: Fmi_dealapprovals[]
-}
-
 const approvalSelect = ['fmi_dealapprovalid', '_fmi_opportunity_value', '_fmi_submittedcompany_value', '_fmi_approver_value', '_fmi_requestedby_value', 'createdon', 'fmi_submitteddealvalue', 'fmi_approvalstatus', 'fmi_requestorcomment']
-const itemSelect = ['fmi_dealapprovalitemid', '_fmi_dealapproval_value', '_fmi_content_value', '_fmi_targetterritory_value', '_fmi_businesswrittenyear_value', '_fmi_businesswrittengroup_value', '_fmi_opportunityitem_value', 'fmi_submittedsalevalue', 'fmi_submittedbudgetvalue', 'fmi_submittedlatestforecast', 'fmi_latestforecasttype', 'fmi_variancetoforecast', 'fmi_variancetobudget', 'fmi_belowforecast']
-const opportunityHistorySelect = ['opportunityid', 'name', 'fmi_dpssalescontractid', 'fmi_currentapprovalstatus']
-const historySelect = ['fmi_dealapprovalid', 'fmi_name', '_fmi_opportunity_value', 'fmi_approvalstatus', 'fmi_approvaltype', 'fmi_approvalversion', 'fmi_approvalsenton', 'fmi_decisionon', 'fmi_decisioncomments', 'fmi_requestorcomment', 'fmi_iscurrentapproval', 'fmi_reapprovalrequired', 'fmi_cancelledon', 'fmi_cancellationreason', 'createdon', '_fmi_approver_value', '_fmi_requestedby_value', '_fmi_decisionby_value', 'fmi_submitteddealvalue']
+const itemSelect = ['fmi_dealapprovalitemid', '_fmi_dealapproval_value', '_fmi_content_value', '_fmi_targetterritory_value', '_fmi_businesswrittenyear_value', '_fmi_opportunityitem_value', 'fmi_submittedsalevalue', 'fmi_submittedbudgetvalue', 'fmi_submittedlatestforecast', 'fmi_latestforecasttype', 'fmi_variancetoforecast', 'fmi_variancetobudget', 'fmi_belowforecast']
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' ? value as Record<string, unknown> : null
@@ -86,7 +99,6 @@ function mapItemLabels(record: Fmi_dealapprovalitems): Fmi_dealapprovalitems {
   const raw = record as unknown as Record<string, unknown>
   return {
     ...record,
-    fmi_businesswrittengroupname: formattedValue(raw, '_fmi_businesswrittengroup_value') ?? record.fmi_businesswrittengroupname,
     fmi_contentname: formattedValue(raw, '_fmi_content_value') ?? record.fmi_contentname,
     fmi_targetterritoryname: formattedValue(raw, '_fmi_targetterritory_value') ?? record.fmi_targetterritoryname,
     fmi_businesswrittenyearname: formattedValue(raw, '_fmi_businesswrittenyear_value') ?? record.fmi_businesswrittenyearname,
@@ -125,15 +137,6 @@ async function getLicenceDates(ids: string[]): Promise<Map<string, { start?: str
   return new Map(result.data.map((row) => [normalizeGuid(row.fmi_opportunityitemid), { start: asString(row.fmi_licensestartdate) || undefined, end: asString(row.fmi_licenseenddate) || undefined }]))
 }
 
-async function getVarianceFlags(ids: string[]): Promise<Map<string, boolean>> {
-  const uniqueIds = [...new Set(ids.map(normalizeGuid).filter(Boolean))]
-  if (uniqueIds.length === 0) return new Map()
-  const filter = uniqueIds.map((id) => `fmi_businesswrittengroupid eq ${id}`).join(' or ')
-  const result = await Fmi_businesswrittengroupsService.getAll({ select: ['fmi_businesswrittengroupid', 'fmi_includeinvariances'], filter })
-  if (!result.success) throw new Error('Business Written Group variance settings could not be loaded.')
-  return new Map((result.data ?? []).map((row) => [normalizeGuid(row.fmi_businesswrittengroupid), row.fmi_includeinvariances !== false]))
-}
-
 async function resolveQueueSalesExecutives(approvals: ApprovalSummary[]): Promise<ApprovalSummary[]> {
   const opportunities = await getOpportunityRows(approvals.map((approval) => approval.opportunityId))
   const salesExecutiveIds = [...new Set([...opportunities.values()].map((row) => row.salesExecutiveId).filter(Boolean))]
@@ -145,7 +148,6 @@ async function resolveDetailLookups(approval: Fmi_dealapprovals, items: Fmi_deal
   const approvalRaw = approval as unknown as Record<string, unknown>
   const itemRaw = items.map((item) => item as unknown as Record<string, unknown>)
   const licenceDates = await getLicenceDates(itemRaw.map((item) => asString(item._fmi_opportunityitem_value)))
-  const varianceFlags = await getVarianceFlags(itemRaw.map((item) => asString(item._fmi_businesswrittengroup_value)))
   const userIds = [approvalRaw._fmi_approver_value, approvalRaw._fmi_requestedby_value].map(asString)
   const [companies, opportunityRows, users, content, territories, years] = await Promise.all([
     getLookupNames(AccountsService.getAll as unknown as LookupService, 'accountid', 'name', [asString(approvalRaw._fmi_submittedcompany_value)]),
@@ -166,8 +168,7 @@ async function resolveDetailLookups(approval: Fmi_dealapprovals, items: Fmi_deal
     items: items.map((item) => {
       const raw = item as unknown as Record<string, unknown>
       const dates = licenceDates.get(normalizeGuid(raw._fmi_opportunityitem_value))
-      const includeInVariances = varianceFlags.get(normalizeGuid(raw._fmi_businesswrittengroup_value))
-      return { ...item, fmi_licensestartdate: dates?.start, fmi_licenseenddate: dates?.end, fmi_includeinvariances: includeInVariances, fmi_contentname: content.get(normalizeGuid(raw._fmi_content_value)) ?? item.fmi_contentname, fmi_targetterritoryname: territories.get(normalizeGuid(raw._fmi_targetterritory_value)) ?? item.fmi_targetterritoryname, fmi_businesswrittenyearname: years.get(normalizeGuid(raw._fmi_businesswrittenyear_value)) ?? item.fmi_businesswrittenyearname }
+      return { ...item, fmi_licensestartdate: dates?.start, fmi_licenseenddate: dates?.end, fmi_contentname: content.get(normalizeGuid(raw._fmi_content_value)) ?? item.fmi_contentname, fmi_targetterritoryname: territories.get(normalizeGuid(raw._fmi_targetterritory_value)) ?? item.fmi_targetterritoryname, fmi_businesswrittenyearname: years.get(normalizeGuid(raw._fmi_businesswrittenyear_value)) ?? item.fmi_businesswrittenyearname }
     }),
   }
 }
@@ -212,37 +213,6 @@ export async function getApprovalDetail(id: string): Promise<ApprovalDetail> {
   return { ...resolved.approval, items: resolved.items }
 }
 
-export async function getOpportunityApprovalHistory(contractId: string): Promise<OpportunityApprovalHistory> {
-  const normalizedContractId = contractId.trim()
-  if (!normalizedContractId) throw new Error('Enter a DPS sale contract ID.')
-  const escapedValue = normalizedContractId.replace(/'/g, "''")
-  const result = await OpportunitiesService.getAll({
-    select: opportunityHistorySelect,
-    filter: `fmi_dpssalescontractid eq '${escapedValue}'`,
-  })
-  if (!result.success) throw new Error('The opportunity could not be searched.')
-  let opportunity = result.data?.[0]
-  if (!opportunity) {
-    const nameResult = await OpportunitiesService.getAll({
-      select: opportunityHistorySelect,
-      filter: `contains(name, '${escapedValue}') or contains(fmi_dpssalescontractid, '${escapedValue}')`,
-    })
-    if (!nameResult.success) throw new Error('The opportunity could not be searched.')
-    opportunity = nameResult.data?.[0]
-  }
-  if (!opportunity) throw new Error(`No opportunity was found for contract ID ${normalizedContractId}.`)
-
-  const opportunityId = normalizeGuid(opportunity.opportunityid)
-  const historyResult = await Fmi_dealapprovalsService.getAll({
-    select: historySelect,
-    filter: `_fmi_opportunity_value eq ${opportunityId}`,
-    orderBy: ['createdon desc'],
-  })
-  if (!historyResult.success) throw new Error('The approval history could not be loaded.')
-  const approvals = historyResult.data ?? []
-  return { opportunity, approvals }
-}
-
 function normalizeDecisionError(error: unknown): Error {
   const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
   const message = raw.toLowerCase()
@@ -263,4 +233,51 @@ export async function submitApprovalDecision(approvalId: string, decision: Appro
   }
   const response = result.data as Record<string, unknown>
   return { approvalId: normalizeGuid(asString(response.fmi_DealApprovalId ?? response.fmi_dealapprovalid ?? normalizedId)), status: typeof response.fmi_ApprovalStatus === 'number' ? response.fmi_ApprovalStatus : null }
+}
+
+export async function getOpportunityApprovalHistory(contractId: string): Promise<OpportunityApprovalHistory> {
+  const trimmedId = contractId.trim()
+  if (!trimmedId) throw new Error('A DPS sale contract ID is required.')
+
+  const opportunityResult = await OpportunitiesService.getAll({
+    select: ['opportunityid', 'name', 'fmi_dpssalescontractid', 'fmi_currentapprovalstatus'],
+    filter: `fmi_dpssalescontractid eq '${trimmedId}'`,
+  })
+
+  if (!opportunityResult.success || !opportunityResult.data || opportunityResult.data.length === 0) {
+    throw new Error('No opportunity was found for this DPS sale contract ID.')
+  }
+
+  const opportunity = opportunityResult.data[0]
+  const opportunityId = normalizeGuid(opportunity.opportunityid)
+
+  const approvalResult = await Fmi_dealapprovalsService.getAll({
+    select: ['fmi_dealapprovalid', 'fmi_approvalstatus', 'fmi_approvaltype', 'fmi_decisioncomments', 'fmi_requestorcomment', 'fmi_approvalversion', 'fmi_submitteddealvalue', 'createdon', 'fmi_decisionon', 'fmi_approvalsenton', '_fmi_opportunity_value'],
+    filter: `_fmi_opportunity_value eq ${opportunityId}`,
+  })
+
+  const approvals = (approvalResult.data ?? []).map((approval) => {
+    const record = approval as unknown as Record<string, unknown>
+    return {
+      fmi_dealapprovalid: normalizeGuid(record.fmi_dealapprovalid),
+      fmi_approvalstatus: typeof record.fmi_approvalstatus === 'number' ? record.fmi_approvalstatus : undefined,
+      fmi_approvaltype: typeof record.fmi_approvaltype === 'number' ? record.fmi_approvaltype : undefined,
+      fmi_decisioncomments: typeof record.fmi_decisioncomments === 'string' ? record.fmi_decisioncomments : null,
+      fmi_requestorcomment: typeof record.fmi_requestorcomment === 'string' ? record.fmi_requestorcomment : null,
+      fmi_approvalversion: typeof record.fmi_approvalversion === 'number' ? record.fmi_approvalversion : undefined,
+      fmi_submitteddealvalue: typeof record.fmi_submitteddealvalue === 'number' ? record.fmi_submitteddealvalue : null,
+      createdon: typeof record.createdon === 'string' ? record.createdon : undefined,
+      fmi_decisionon: typeof record.fmi_decisionon === 'string' ? record.fmi_decisionon : null,
+      fmi_approvalsenton: typeof record.fmi_approvalsenton === 'string' ? record.fmi_approvalsenton : null,
+    }
+  })
+
+  return {
+    opportunity: {
+      name: asString(opportunity.name),
+      fmi_dpssalescontractid: asString(opportunity.fmi_dpssalescontractid),
+      fmi_currentapprovalstatus: typeof opportunity.fmi_currentapprovalstatus === 'number' ? opportunity.fmi_currentapprovalstatus : undefined,
+    },
+    approvals,
+  }
 }
