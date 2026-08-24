@@ -11,11 +11,50 @@
   </style>
 </head>
 <body>
-  <iframe
-    title="Deal Approval Centre"
-    src="https://apps.powerapps.com/play/e/4b002f9f-ad17-e4a8-8582-0970ce77cdae/app/63bb01cf-9750-4567-889a-60e6e503a6ba?tenantId=a4e4c184-a05e-4cc1-844b-98a4e96a1970&amp;embedded=1"
-    allow="clipboard-read; clipboard-write"
-    allowfullscreen>
-  </iframe>
+  <iframe title="Deal Approval Centre" allow="clipboard-read; clipboard-write" allowfullscreen></iframe>
+  <script>
+    (function () {
+      var APP_ORIGIN = "https://apps.powerapps.com";
+      var APP_URL = APP_ORIGIN + "/play/e/4b002f9f-ad17-e4a8-8582-0970ce77cdae/app/63bb01cf-9750-4567-889a-60e6e503a6ba";
+      var TENANT_ID = "a4e4c184-a05e-4cc1-844b-98a4e96a1970";
+
+      function isGuid(value) {
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value || "");
+      }
+
+      function readOpportunityId() {
+        var rawData = new URLSearchParams(window.location.search).get("data") || "";
+        if (!rawData) return null;
+
+        try {
+          var payload = JSON.parse(decodeURIComponent(rawData));
+          var opportunityId = String(payload.opportunityId || "").replace(/[{}]/g, "").trim();
+          return isGuid(opportunityId) ? opportunityId : null;
+        } catch (error) {
+          console.warn("Deal Approval Centre host could not parse web resource data.", error);
+          return null;
+        }
+      }
+
+      var opportunityId = readOpportunityId();
+      var appUrl = new URL(APP_URL);
+      appUrl.searchParams.set("tenantId", TENANT_ID);
+      appUrl.searchParams.set("embedded", "1");
+
+      if (opportunityId) {
+        appUrl.searchParams.set("opportunityId", opportunityId);
+        appUrl.hash = "/request-deal-approval";
+      }
+
+      var iframe = document.querySelector("iframe");
+      iframe.src = appUrl.toString();
+
+      window.addEventListener("message", function (event) {
+        if (event.origin !== APP_ORIGIN || event.source !== iframe.contentWindow) return;
+        if (!event.data || event.data.type !== "DAC_READY") return;
+        iframe.contentWindow.postMessage({ type: "DAC_CONTEXT", opportunityId: opportunityId }, APP_ORIGIN);
+      });
+    })();
+  </script>
 </body>
 </html>
