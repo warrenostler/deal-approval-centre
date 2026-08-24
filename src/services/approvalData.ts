@@ -51,7 +51,7 @@ export interface OpportunityApprovalHistory {
 }
 
 const approvalSelect = ['fmi_dealapprovalid', '_fmi_opportunity_value', '_fmi_submittedcompany_value', '_fmi_approver_value', '_fmi_requestedby_value', 'createdon', 'fmi_submitteddealvalue', 'fmi_approvalstatus', 'fmi_requestorcomment']
-const itemSelect = ['fmi_dealapprovalitemid', '_fmi_dealapproval_value', '_fmi_content_value', '_fmi_targetterritory_value', '_fmi_businesswrittenyear_value', '_fmi_opportunityitem_value', 'fmi_submittedsalevalue', 'fmi_submittedbudgetvalue', 'fmi_submittedlatestforecast', 'fmi_latestforecasttype', 'fmi_variancetoforecast', 'fmi_variancetobudget', 'fmi_belowforecast']
+const itemSelect = ['fmi_dealapprovalitemid', '_fmi_dealapproval_value', '_fmi_content_value', '_fmi_targetterritory_value', '_fmi_businesswrittenyear_value', '_fmi_businesswrittengroup_value', '_fmi_opportunityitem_value', 'fmi_submittedsalevalue', 'fmi_submittedbudgetvalue', 'fmi_submittedlatestforecast', 'fmi_latestforecasttype', 'fmi_variancetoforecast', 'fmi_variancetobudget', 'fmi_belowforecast']
 const opportunityHistorySelect = ['opportunityid', 'name', 'fmi_dpssalescontractid', 'fmi_currentapprovalstatus']
 const historySelect = ['fmi_dealapprovalid', 'fmi_name', '_fmi_opportunity_value', 'fmi_approvalstatus', 'fmi_approvaltype', 'fmi_approvalversion', 'fmi_approvalsenton', 'fmi_decisionon', 'fmi_decisioncomments', 'fmi_requestorcomment', 'fmi_iscurrentapproval', 'fmi_reapprovalrequired', 'fmi_cancelledon', 'fmi_cancellationreason', 'createdon', '_fmi_approver_value', '_fmi_requestedby_value', '_fmi_decisionby_value', 'fmi_submitteddealvalue']
 
@@ -85,6 +85,7 @@ function mapItemLabels(record: Fmi_dealapprovalitems): Fmi_dealapprovalitems {
   const raw = record as unknown as Record<string, unknown>
   return {
     ...record,
+    fmi_businesswrittengroupname: formattedValue(raw, '_fmi_businesswrittengroup_value') ?? record.fmi_businesswrittengroupname,
     fmi_contentname: formattedValue(raw, '_fmi_content_value') ?? record.fmi_contentname,
     fmi_targetterritoryname: formattedValue(raw, '_fmi_targetterritory_value') ?? record.fmi_targetterritoryname,
     fmi_businesswrittenyearname: formattedValue(raw, '_fmi_businesswrittenyear_value') ?? record.fmi_businesswrittenyearname,

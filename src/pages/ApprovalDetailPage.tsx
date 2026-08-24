@@ -163,6 +163,7 @@ export function ApprovalDetailPage() {
                     <div>
                       <strong>{item.fmi_contentname || 'Content unavailable'}</strong>
                       <p>{item.fmi_targetterritoryname || '-'} · BWY {item.fmi_businesswrittenyearname || '-'} · Licence {formatDateOnly(item.fmi_licensestartdate)} – {formatDateOnly(item.fmi_licenseenddate)}</p>
+                                          <p>{item.fmi_targetterritoryname || '-'} · BWG {item.fmi_businesswrittengroupname || '-'} · BWY {item.fmi_businesswrittenyearname || '-'} · Licence {formatDateOnly(item.fmi_licensestartdate)} – {formatDateOnly(item.fmi_licenseenddate)}</p>
                     </div>
                     <span>{item.fmi_belowforecast ? 'Below forecast' : 'On track'}</span>
                   </div>
