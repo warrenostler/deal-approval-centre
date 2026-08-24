@@ -161,7 +161,7 @@ export function ApprovalDetailPage() {
                 <article className={item.fmi_belowforecast ? 'item-card below-forecast' : 'item-card'} key={item.fmi_dealapprovalitemid}>
                   <div className="item-card-heading">
                     <div>
-                      <strong>{item.fmi_contentname || 'Content unavailable'}</strong>
+                      <div className="item-card-title"><strong>{item.fmi_contentname || 'Content unavailable'}</strong><span className="item-bwg">BWG {item.fmi_businesswrittengroupname || '-'}</span></div>
                       <p>{item.fmi_targetterritoryname || '-'} · BWY {item.fmi_businesswrittenyearname || '-'} · Licence {formatDateOnly(item.fmi_licensestartdate)} – {formatDateOnly(item.fmi_licenseenddate)}</p>
                     </div>
                     <span>{item.fmi_belowforecast ? 'Below forecast' : 'On track'}</span>
@@ -171,8 +171,8 @@ export function ApprovalDetailPage() {
                     <div><dt>Submitted budget</dt><dd>{formatUsd(item.fmi_submittedbudgetvalue)}</dd></div>
                     <div><dt>Latest forecast</dt><dd>{formatUsd(item.fmi_submittedlatestforecast)}</dd></div>
                     <div><dt>Forecast type</dt><dd>{item.fmi_latestforecasttypename || '-'}</dd></div>
-                    <div><dt>Variance to forecast</dt><dd>{formatUsd(item.fmi_variancetoforecast)}</dd></div>
-                    <div><dt>Variance to budget</dt><dd>{formatUsd(item.fmi_variancetobudget)}</dd></div>
+                    <div><dt>Variance to forecast</dt><dd>{item.fmi_includeinvariances === false ? 'N/A' : formatUsd(item.fmi_variancetoforecast)}</dd></div>
+                    <div><dt>Variance to budget</dt><dd>{item.fmi_includeinvariances === false ? 'N/A' : formatUsd(item.fmi_variancetobudget)}</dd></div>
                   </div>
                 </article>
               ))}

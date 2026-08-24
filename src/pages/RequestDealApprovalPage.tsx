@@ -211,7 +211,7 @@ export function RequestDealApprovalPage() {
                 const warningText = item.financialWarning || 'Financial comparison unavailable.'
                 const showNa = item.includeInVariance === false
                 return (
-                  <tr key={item.opportunityItemId || `${item.title}-${item.territory}`}>
+                  <tr className={hasWarning ? 'request-warning-row' : undefined} key={item.opportunityItemId || `${item.title}-${item.territory}`}>
                     <td>
                       <div className="request-title-cell">
                         <span>{item.title || 'Untitled item'}</span>
