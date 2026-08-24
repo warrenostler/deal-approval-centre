@@ -52,7 +52,7 @@ export interface OpportunityApprovalHistory {
 
 const approvalSelect = ['fmi_dealapprovalid', '_fmi_opportunity_value', '_fmi_submittedcompany_value', '_fmi_approver_value', '_fmi_requestedby_value', 'createdon', 'fmi_submitteddealvalue', 'fmi_approvalstatus', 'fmi_requestorcomment']
 const itemSelect = ['fmi_dealapprovalitemid', '_fmi_dealapproval_value', '_fmi_content_value', '_fmi_targetterritory_value', '_fmi_businesswrittenyear_value', '_fmi_opportunityitem_value', 'fmi_submittedsalevalue', 'fmi_submittedbudgetvalue', 'fmi_submittedlatestforecast', 'fmi_latestforecasttype', 'fmi_variancetoforecast', 'fmi_variancetobudget', 'fmi_belowforecast']
-const opportunityHistorySelect = ['opportunityid', 'name', 'fmi_dpssalescontractid', 'fmi_currentapprovalstatus', '_fmi_CurrentDealApproval_value', '_parentaccountid_value']
+const opportunityHistorySelect = ['opportunityid', 'name', 'fmi_dpssalescontractid', 'fmi_currentapprovalstatus']
 const historySelect = ['fmi_dealapprovalid', 'fmi_name', '_fmi_opportunity_value', 'fmi_approvalstatus', 'fmi_approvaltype', 'fmi_approvalversion', 'fmi_approvalsenton', 'fmi_decisionon', 'fmi_decisioncomments', 'fmi_requestorcomment', 'fmi_iscurrentapproval', 'fmi_reapprovalrequired', 'fmi_cancelledon', 'fmi_cancellationreason', 'createdon', '_fmi_approver_value', '_fmi_requestedby_value', '_fmi_decisionby_value', 'fmi_submitteddealvalue']
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -212,7 +212,7 @@ export async function getOpportunityApprovalHistory(contractId: string): Promise
   if (!opportunity) {
     const nameResult = await OpportunitiesService.getAll({
       select: opportunityHistorySelect,
-      filter: `name eq '${escapedValue}'`,
+      filter: `contains(name, '${escapedValue}') or contains(fmi_dpssalescontractid, '${escapedValue}')`,
     })
     if (!nameResult.success) throw new Error('The opportunity could not be searched.')
     opportunity = nameResult.data?.[0]
