@@ -202,12 +202,21 @@ export async function getApprovalDetail(id: string): Promise<ApprovalDetail> {
 export async function getOpportunityApprovalHistory(contractId: string): Promise<OpportunityApprovalHistory> {
   const normalizedContractId = contractId.trim()
   if (!normalizedContractId) throw new Error('Enter a DPS sale contract ID.')
+  const escapedValue = normalizedContractId.replace(/'/g, "''")
   const result = await OpportunitiesService.getAll({
     select: opportunityHistorySelect,
-    filter: `fmi_dpssalescontractid eq '${normalizedContractId.replace(/'/g, "''")}'`,
+    filter: `fmi_dpssalescontractid eq '${escapedValue}'`,
   })
   if (!result.success) throw new Error('The opportunity could not be searched.')
-  const opportunity = result.data?.[0]
+  let opportunity = result.data?.[0]
+  if (!opportunity) {
+    const nameResult = await OpportunitiesService.getAll({
+      select: opportunityHistorySelect,
+      filter: `name eq '${escapedValue}'`,
+    })
+    if (!nameResult.success) throw new Error('The opportunity could not be searched.')
+    opportunity = nameResult.data?.[0]
+  }
   if (!opportunity) throw new Error(`No opportunity was found for contract ID ${normalizedContractId}.`)
 
   const opportunityId = normalizeGuid(opportunity.opportunityid)
