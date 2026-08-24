@@ -13,12 +13,12 @@ export class Fmi_SubmitDealApprovalService {
   private static readonly client = getClient(dataSourcesInfo);
 
   /**
-   * @param fmi_OpportunityId type: `Guid`
-   * @param fmi_CoordinatorComment type: `String`
+   * @param OpportunityId type: `Guid`
+   * @param CoordinatorComment type: `String`
    */
-  public static async fmi_SubmitDealApproval(fmi_OpportunityId: string, fmi_CoordinatorComment: string): Promise<IOperationResult<Record<string, unknown>>> {
-    const params: { fmi_OpportunityId: string, fmi_CoordinatorComment: string } = { fmi_OpportunityId, fmi_CoordinatorComment };
-    const result = await Fmi_SubmitDealApprovalService.client.executeAsync<{ fmi_OpportunityId: string, fmi_CoordinatorComment: string }, Record<string, unknown>>(
+  public static async fmi_SubmitDealApproval(OpportunityId: string, CoordinatorComment?: string): Promise<IOperationResult<Record<string, unknown>>> {
+    const params: { OpportunityId: string, CoordinatorComment?: string } = { OpportunityId, CoordinatorComment };
+    const result = await Fmi_SubmitDealApprovalService.client.executeAsync<{ OpportunityId: string, CoordinatorComment?: string }, Record<string, unknown>>(
       {
         dataverseRequest: {
           action: 'customapi',
