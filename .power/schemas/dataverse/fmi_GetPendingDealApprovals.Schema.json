@@ -1,0 +1,34 @@
+{
+  "name": "fmi_GetPendingDealApprovals",
+  "title": "fmi_GetPendingDealApprovals",
+  "type": "Microsoft.PowerApps/dataverseOperation",
+  "properties": {
+    "displayName": "fmi_GetPendingDealApprovals",
+    "swagger": {
+      "swagger": "2.0",
+      "info": {
+        "title": "fmi_GetPendingDealApprovals",
+        "version": "1.0"
+      },
+      "basePath": "/api/data/v9.2",
+      "paths": {
+        "/fmi_GetPendingDealApprovals": {
+          "post": {
+            "operationId": "fmi_GetPendingDealApprovals",
+            "parameters": [],
+            "responses": {
+              "200": {
+                "description": "Success",
+                "schema": {
+                  "type": "object",
+                  "x-ms-dataverse-type": "LookupType",
+                  "x-ms-csdl-type": "mscrm.fmi_GetPendingDealApprovalsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

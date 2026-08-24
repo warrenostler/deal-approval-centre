@@ -1,0 +1,71 @@
+{
+  "version": "1.0",
+  "appId": "63bb01cf-9750-4567-889a-60e6e503a6ba",
+  "appDisplayName": "Deal Approval Centre",
+  "region": "prod",
+  "appType": "CodeApp",
+  "environmentId": "4b002f9f-ad17-e4a8-8582-0970ce77cdae",
+  "description": " ",
+  "buildPath": "./dist",
+  "buildEntryPoint": "index.html",
+  "localAppUrl": "http://localhost:3000",
+  "logoPath": "Default",
+  "connectionReferences": {},
+  "databaseReferences": {
+    "default.cds": {
+      "dataSources": {
+        "environment_39a902ba": {
+          "entitySetName": "Environment",
+          "logicalName": "environment_39a902ba",
+          "isHidden": false
+        },
+        "dealapprovals": {
+          "entitySetName": "fmi_dealapprovals",
+          "logicalName": "fmi_dealapproval",
+          "isHidden": false
+        },
+        "dealapprovalitems": {
+          "entitySetName": "fmi_dealapprovalitems",
+          "logicalName": "fmi_dealapprovalitem",
+          "isHidden": false
+        },
+        "companies": {
+          "entitySetName": "accounts",
+          "logicalName": "account",
+          "isHidden": false
+        },
+        "opportunities": {
+          "entitySetName": "opportunities",
+          "logicalName": "opportunity",
+          "isHidden": false
+        },
+        "users": {
+          "entitySetName": "systemusers",
+          "logicalName": "systemuser",
+          "isHidden": false
+        },
+        "content": {
+          "entitySetName": "fmi_contents",
+          "logicalName": "fmi_content",
+          "isHidden": false
+        },
+        "targetterritories": {
+          "entitySetName": "fmi_targetterritories",
+          "logicalName": "fmi_targetterritory",
+          "isHidden": false
+        },
+        "businesswrittenyears": {
+          "entitySetName": "fmi_businesswrittenyears",
+          "logicalName": "fmi_businesswrittenyear",
+          "isHidden": false
+        },
+        "opportunityitems": {
+          "entitySetName": "fmi_opportunityitems",
+          "logicalName": "fmi_opportunityitem",
+          "isHidden": false
+        }
+      },
+      "environmentVariableName": ""
+    }
+  }
+}

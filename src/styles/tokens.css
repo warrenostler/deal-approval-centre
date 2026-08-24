@@ -1,0 +1,26 @@
+:root {
+  --bg: #f6f4ef;
+  --surface: #ffffff;
+  --surface-2: #f3efe7;
+  --text: #242018;
+  --muted: #6d6556;
+  --line: #d7d0c3;
+  --accent: #1e6f5c;
+  --accent-contrast: #ffffff;
+  --danger: #9f2d2d;
+  --radius: 12px;
+  --shadow: 0 12px 30px rgba(36, 32, 24, 0.08);
+
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text);
+  background: radial-gradient(circle at 20% 0%, #efe8d7 0%, var(--bg) 45%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: transparent;
+}

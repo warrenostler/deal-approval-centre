@@ -1,0 +1,60 @@
+{
+  "name": "fmi_ProcessDealApprovalDecision",
+  "title": "fmi_ProcessDealApprovalDecision",
+  "type": "Microsoft.PowerApps/dataverseOperation",
+  "properties": {
+    "displayName": "fmi_ProcessDealApprovalDecision",
+    "swagger": {
+      "swagger": "2.0",
+      "info": {
+        "title": "fmi_ProcessDealApprovalDecision",
+        "version": "1.0"
+      },
+      "basePath": "/api/data/v9.2",
+      "paths": {
+        "/fmi_ProcessDealApprovalDecision": {
+          "post": {
+            "operationId": "fmi_ProcessDealApprovalDecision",
+            "parameters": [
+              {
+                "name": "fmi_DealApprovalId",
+                "in": "body",
+                "required": true,
+                "type": "string",
+                "format": "guid",
+                "x-ms-dataverse-type": "UniqueidentifierType",
+                "x-ms-csdl-type": "Edm.Guid"
+              },
+              {
+                "name": "fmi_Decision",
+                "in": "body",
+                "required": true,
+                "type": "number",
+                "x-ms-dataverse-type": "IntegerType",
+                "x-ms-csdl-type": "Edm.Int32"
+              },
+              {
+                "name": "fmi_DecisionComment",
+                "in": "body",
+                "required": true,
+                "type": "string",
+                "x-ms-dataverse-type": "StringType",
+                "x-ms-csdl-type": "Edm.String"
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "Success",
+                "schema": {
+                  "type": "object",
+                  "x-ms-dataverse-type": "LookupType",
+                  "x-ms-csdl-type": "mscrm.fmi_ProcessDealApprovalDecisionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
