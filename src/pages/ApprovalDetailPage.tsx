@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { getApprovalDetail, submitApprovalDecision, type ApprovalDecision, type ApprovalDetail } from '../services/approvalData'
 import { formatDateOnly, formatDateTime, formatUsd } from '../utils/formatters'
 import { ArrowLeftIcon, CalendarIcon, CheckIcon, ChevronDownIcon, CommentIcon, DocumentIcon, DollarIcon, GavelIcon, LayersIcon, UserIcon, XIcon } from '../components/icons'
 
 export function ApprovalDetailPage() {
   const { approvalId } = useParams()
+  const location = useLocation()
   const navigate = useNavigate()
   const [approval, setApproval] = useState<ApprovalDetail | null>(null)
   const [comment, setComment] = useState('')
@@ -84,10 +85,11 @@ export function ApprovalDetailPage() {
   const itemCount = approval.items.length
   const visibleItems = approval.items.slice(0, itemsExpanded ? itemCount : 5)
   const historyItem = approval.items.find((item) => item.fmi_dealapprovalitemid === historyItemId)
+  const returnPath = typeof location.state === 'object' && location.state !== null && 'from' in location.state && typeof location.state.from === 'string' ? location.state.from : '/'
 
   return (
     <main className="approval-app detail-page">
-      <div className="detail-back-row"><Link to="/" className="back-link"><ArrowLeftIcon width={16} height={16} /><span>Back to main menu</span></Link></div>
+      <div className="detail-back-row"><Link to={returnPath} className="back-link"><ArrowLeftIcon width={16} height={16} /><span>{returnPath === '/opportunity-history' ? 'Back to approval history' : 'Back to main menu'}</span></Link></div>
 
       <div className="deal-heading-row">
         <span className="deal-heading-icon"><DocumentIcon width={20} height={20} /></span>

@@ -71,7 +71,7 @@ export function OpportunityApprovalHistoryPage() {
               return <article className="history-entry" key={approval.fmi_dealapprovalid}>
                 <div className="history-entry-marker"><ClockIcon width={17} height={17} /></div>
                 <div className="history-entry-body">
-                  <div className="history-entry-heading"><div><strong>{status}</strong><span>{optionLabel(Fmi_dealapprovalsfmi_approvaltype, approval.fmi_approvaltype, 'Approval')} {approval.fmi_approvalversion ? `· Version ${approval.fmi_approvalversion}` : ''}</span></div>{isPending ? <Link className="history-detail-link" to={`/approvals/${approval.fmi_dealapprovalid}`}>Open approval</Link> : <span className="history-complete">Recorded</span>}</div>
+                  <div className="history-entry-heading"><div><strong>{status}</strong><span>{optionLabel(Fmi_dealapprovalsfmi_approvaltype, approval.fmi_approvaltype, 'Approval')} {approval.fmi_approvalversion ? `· Version ${approval.fmi_approvalversion}` : ''}</span></div>{isPending ? <Link className="history-detail-link" to={`/approvals/${approval.fmi_dealapprovalid}`} state={{ from: '/opportunity-history' }}>Open approval</Link> : <span className="history-complete">Recorded</span>}</div>
                   <div className="history-entry-meta"><span><CalendarIcon width={15} height={15} />{formatDateTime(approval.fmi_decisionon || approval.fmi_approvalsenton || approval.createdon)}</span><span>Value {formatUsd(approval.fmi_submitteddealvalue)}</span></div>
                   {(approval.fmi_decisioncomments || approval.fmi_requestorcomment) && <p className="history-comment">{approval.fmi_decisioncomments || approval.fmi_requestorcomment}</p>}
                 </div>
