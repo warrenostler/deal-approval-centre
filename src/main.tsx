@@ -73,7 +73,7 @@ export const opportunityIdPromise = new Promise<string | null>((resolve) => {
       console.warn('[DealApprovalCentre] DAC_READY target failed', error)
     }
   }
-  window.setTimeout(() => finish(null), 2000)
+  window.setTimeout(() => finish(null), 1000)
 })
 
 ;(window as RuntimeWindow).__dacOpportunityIdPromise = opportunityIdPromise
