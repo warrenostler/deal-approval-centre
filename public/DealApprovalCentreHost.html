@@ -2,20 +2,191 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Deal Approval Centre</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Request Deal Approval</title>
+
   <style>
-    html, body, iframe { width: 100%; height: 100%; }
-    html, body { margin: 0; overflow: hidden; background: #f7f9f8; }
-    iframe { display: block; border: 0; }
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
   </style>
 </head>
+
 <body>
-  <iframe
-    title="Deal Approval Centre"
-    src="https://apps.powerapps.com/play/e/4b002f9f-ad17-e4a8-8582-0970ce77cdae/app/63bb01cf-9750-4567-889a-60e6e503a6ba?tenantId=a4e4c184-a05e-4cc1-844b-98a4e96a1970&amp;embedded=1"
-    allow="clipboard-read; clipboard-write"
-    allowfullscreen>
-  </iframe>
+  <iframe id="appFrame" title="Request Deal Approval"></iframe>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var APP_ORIGIN =
+        "https://4b002f9fad17e4a885820970ce77cd.ae.environment.api.powerplatformusercontent.com";
+
+      var APP_BASE_URL =
+        "https://apps.powerapps.com/play/e/4b002f9f-ad17-e4a8-8582-0970ce77cdae/app/63bb01cf-9750-4567-889a-60e6e503a6ba?tenantId=a4e4c184-a05e-4cc1-844b-98a4e96a1970&hint=73d3daef-2e84-4692-ba32-a4fab46825fd&sourcetime=1787599470173";
+
+      var frame = document.getElementById("appFrame");
+      var opportunityId = "";
+      var appWindow = null;
+      var contextTimer = null;
+      var handshakeComplete = false;
+
+      function isGuid(value) {
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          value || ""
+        );
+      }
+
+      function clean(value) {
+        return String(value || "")
+          .replace(/[{}]/g, "")
+          .trim();
+      }
+
+      function readOpportunityId() {
+        var query = new URLSearchParams(window.location.search);
+
+        var directId = clean(
+          query.get("opportunityId") ||
+          query.get("OpportunityId")
+        );
+
+        if (isGuid(directId)) {
+          return directId;
+        }
+
+        var data = query.get("data");
+
+        if (!data) {
+          return "";
+        }
+
+        var parsed;
+
+        try {
+          parsed = JSON.parse(data);
+        } catch (error) {
+          try {
+            parsed = JSON.parse(decodeURIComponent(data));
+          } catch (decodeError) {
+            return "";
+          }
+        }
+
+        var id = clean(
+          parsed.opportunityId ||
+          parsed.OpportunityId ||
+          parsed.id ||
+          parsed.Id
+        );
+
+        return isGuid(id) ? id : "";
+      }
+
+      function sendContext(target) {
+        if (!target || !opportunityId || handshakeComplete) {
+          return;
+        }
+
+        target.postMessage(
+          {
+            type: "DAC_CONTEXT",
+            opportunityId: opportunityId
+          },
+          APP_ORIGIN
+        );
+      }
+
+      opportunityId = readOpportunityId();
+
+      if (!opportunityId) {
+        return;
+      }
+
+      window.addEventListener("message", function (event) {
+        if (
+          event.data &&
+          event.data.type === "DAC_CLOSE_REQUEST" &&
+          (event.source === appWindow || event.source === frame.contentWindow)
+        ) {
+          var parentXrm = window.parent && window.parent.Xrm;
+          if (
+            parentXrm &&
+            parentXrm.Navigation &&
+            typeof parentXrm.Navigation.openForm === "function" &&
+            opportunityId
+          ) {
+            parentXrm.Navigation.openForm({
+              entityName: "opportunity",
+              entityId: opportunityId
+            }).then(function () {
+              if (
+                parentXrm.Navigation &&
+                typeof parentXrm.Navigation.close === "function"
+              ) {
+                parentXrm.Navigation.close();
+              }
+            }).catch(function (error) {
+              console.error("Could not open the originating Opportunity.", error);
+            });
+          } else if (window.close) {
+            window.close();
+          }
+          return;
+        }
+
+        if (
+          event.origin === APP_ORIGIN &&
+          event.data &&
+          event.data.type === "DAC_ACK"
+        ) {
+          handshakeComplete = true;
+
+          if (contextTimer) {
+            window.clearInterval(contextTimer);
+            contextTimer = null;
+          }
+
+          return;
+        }
+
+        if (
+          event.data &&
+          event.data.type === "DAC_READY" &&
+          event.source
+        ) {
+          appWindow = event.source;
+          sendContext(appWindow);
+
+          if (!contextTimer) {
+            contextTimer = window.setInterval(function () {
+              sendContext(appWindow || frame.contentWindow);
+            }, 300);
+
+            window.setTimeout(function () {
+              if (contextTimer) {
+                window.clearInterval(contextTimer);
+                contextTimer = null;
+              }
+            }, 15000);
+          }
+        }
+      });
+
+      frame.src = APP_BASE_URL;
+    })();
+  </script>
 </body>
 </html>

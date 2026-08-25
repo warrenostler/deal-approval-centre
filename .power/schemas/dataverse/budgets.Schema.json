@@ -1,0 +1,1956 @@
+{
+  "name": "goal",
+  "title": "Budgets",
+  "schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "x-ms-dataverse-entity": true,
+      "x-ms-dataverse-entityset": "goals",
+      "x-ms-dataverse-primary-id": "goalid",
+      "x-ms-dataverse-primary-name": "title",
+      "properties": {
+        "actualdecimal": {
+          "type": "string",
+          "title": "Actual (Decimal)",
+          "x-ms-dataverse-attribute": "actualdecimal",
+          "x-ms-dataverse-type": "DecimalType",
+          "x-ms-schema-name": "ActualDecimal"
+        },
+        "actualinteger": {
+          "type": "string",
+          "title": "Actual (Integer)",
+          "x-ms-dataverse-attribute": "actualinteger",
+          "x-ms-dataverse-type": "IntegerType",
+          "x-ms-schema-name": "ActualInteger"
+        },
+        "actualmoney": {
+          "type": "string",
+          "title": "Actual (Money)",
+          "x-ms-dataverse-attribute": "actualmoney",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "ActualMoney"
+        },
+        "actualmoney_base": {
+          "type": "string",
+          "title": "Actual (Money) (Base)",
+          "x-ms-dataverse-attribute": "actualmoney_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "ActualMoney_Base",
+          "x-ms-read-only": true
+        },
+        "actualstring": {
+          "type": "string",
+          "title": "Actual",
+          "x-ms-dataverse-attribute": "actualstring",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "ActualString",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "amountdatatype": {
+          "type": "string",
+          "title": "Amount Data Type",
+          "x-ms-dataverse-attribute": "amountdatatype",
+          "x-ms-dataverse-type": "PicklistType",
+          "x-ms-schema-name": "AmountDataType",
+          "enum": [
+            "Money",
+            "Decimal",
+            "Integer"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1,
+            2
+          ],
+          "Color": [
+            null,
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "58465852-f913-df11-a16e-00155d7aa40d",
+          "x-ms-isGlobal": true,
+          "x-ms-optionsetdisplayname": "Goal Type",
+          "x-ms-optionSetType": "Picklist"
+        },
+        "amountdatatypename": {
+          "type": "string",
+          "title": "amountdatatypename",
+          "x-ms-dataverse-attribute": "amountdatatypename",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "AmountDataTypeName",
+          "x-ms-read-only": true
+        },
+        "computedtargetasoftodaydecimal": {
+          "type": "string",
+          "title": "Today's Target (Decimal)",
+          "x-ms-dataverse-attribute": "computedtargetasoftodaydecimal",
+          "x-ms-dataverse-type": "DecimalType",
+          "x-ms-schema-name": "ComputedTargetAsOfTodayDecimal",
+          "x-ms-read-only": true
+        },
+        "computedtargetasoftodayinteger": {
+          "type": "string",
+          "title": "Today's Target (Integer)",
+          "x-ms-dataverse-attribute": "computedtargetasoftodayinteger",
+          "x-ms-dataverse-type": "IntegerType",
+          "x-ms-schema-name": "ComputedTargetAsOfTodayInteger",
+          "x-ms-read-only": true
+        },
+        "computedtargetasoftodaymoney": {
+          "type": "string",
+          "title": "Today's Target (Money)",
+          "x-ms-dataverse-attribute": "computedtargetasoftodaymoney",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "ComputedTargetAsOfTodayMoney",
+          "x-ms-read-only": true
+        },
+        "computedtargetasoftodaymoney_base": {
+          "type": "string",
+          "title": "Today's Target (Money) (Base)",
+          "x-ms-dataverse-attribute": "computedtargetasoftodaymoney_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "ComputedTargetAsOfTodayMoney_Base",
+          "x-ms-read-only": true
+        },
+        "computedtargetasoftodaypercentageachieved": {
+          "type": "string",
+          "title": "Today's Target (Percentage Achieved)",
+          "x-ms-dataverse-attribute": "computedtargetasoftodaypercentageachieved",
+          "x-ms-dataverse-type": "DecimalType",
+          "x-ms-schema-name": "ComputedTargetAsOfTodayPercentageAchieved",
+          "x-ms-read-only": true
+        },
+        "consideronlygoalownersrecords": {
+          "type": "string",
+          "title": "Record Set for Rollup",
+          "x-ms-dataverse-attribute": "consideronlygoalownersrecords",
+          "x-ms-dataverse-type": "BooleanType",
+          "x-ms-schema-name": "ConsiderOnlyGoalOwnersRecords",
+          "required": true,
+          "enum": [
+            "All",
+            "Owned by budget owner"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1
+          ],
+          "Color": [
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "29d8f20c-2c1a-df11-a959-00155d26c21d",
+          "x-ms-isGlobal": false,
+          "x-ms-optionsetdisplayname": "Consider only budget owner's records",
+          "x-ms-optionSetType": "Boolean"
+        },
+        "consideronlygoalownersrecordsname": {
+          "type": "string",
+          "title": "consideronlygoalownersrecordsname",
+          "x-ms-dataverse-attribute": "consideronlygoalownersrecordsname",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "ConsiderOnlyGoalOwnersRecordsName",
+          "x-ms-read-only": true
+        },
+        "createdby": {
+          "type": "string",
+          "title": "Created By",
+          "x-ms-dataverse-attribute": "createdby",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "CreatedBy",
+          "x-ms-read-only": true
+        },
+        "createdbyname": {
+          "type": "string",
+          "title": "createdbyname",
+          "x-ms-dataverse-attribute": "createdbyname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "CreatedByName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "createdon": {
+          "type": "string",
+          "title": "Created On",
+          "x-ms-dataverse-attribute": "createdon",
+          "x-ms-dataverse-type": "DateTimeType",
+          "x-ms-schema-name": "CreatedOn",
+          "x-ms-read-only": true
+        },
+        "createdonbehalfby": {
+          "type": "string",
+          "title": "Created By (Delegate)",
+          "x-ms-dataverse-attribute": "createdonbehalfby",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "CreatedOnBehalfBy",
+          "x-ms-read-only": true
+        },
+        "createdonbehalfbyname": {
+          "type": "string",
+          "title": "createdonbehalfbyname",
+          "x-ms-dataverse-attribute": "createdonbehalfbyname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "CreatedOnBehalfByName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "createdonbehalfbyyominame": {
+          "type": "string",
+          "title": "createdonbehalfbyyominame",
+          "x-ms-dataverse-attribute": "createdonbehalfbyyominame",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "CreatedOnBehalfByYomiName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "customrollupfielddecimal": {
+          "type": "string",
+          "title": "Custom Rollup Field (Decimal)",
+          "x-ms-dataverse-attribute": "customrollupfielddecimal",
+          "x-ms-dataverse-type": "DecimalType",
+          "x-ms-schema-name": "CustomRollupFieldDecimal"
+        },
+        "customrollupfieldinteger": {
+          "type": "string",
+          "title": "Custom Rollup Field (Integer)",
+          "x-ms-dataverse-attribute": "customrollupfieldinteger",
+          "x-ms-dataverse-type": "IntegerType",
+          "x-ms-schema-name": "CustomRollupFieldInteger"
+        },
+        "customrollupfieldmoney": {
+          "type": "string",
+          "title": "Custom Rollup Field (Money)",
+          "x-ms-dataverse-attribute": "customrollupfieldmoney",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "CustomRollupFieldMoney"
+        },
+        "customrollupfieldmoney_base": {
+          "type": "string",
+          "title": "Custom Rollup Field (Money) (Base)",
+          "x-ms-dataverse-attribute": "customrollupfieldmoney_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "CustomRollupFieldMoney_Base",
+          "x-ms-read-only": true
+        },
+        "customrollupfieldstring": {
+          "type": "string",
+          "title": "Custom Rollup Field",
+          "x-ms-dataverse-attribute": "customrollupfieldstring",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "CustomRollupFieldString",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "depth": {
+          "type": "string",
+          "title": "Depth",
+          "x-ms-dataverse-attribute": "depth",
+          "x-ms-dataverse-type": "IntegerType",
+          "x-ms-schema-name": "Depth",
+          "x-ms-read-only": true
+        },
+        "entityimage": {
+          "type": "string",
+          "title": "Entity Image",
+          "x-ms-dataverse-attribute": "entityimage",
+          "x-ms-dataverse-type": "ImageType",
+          "x-ms-schema-name": "EntityImage"
+        },
+        "entityimage_timestamp": {
+          "type": "string",
+          "title": "entityimage_timestamp",
+          "x-ms-dataverse-attribute": "entityimage_timestamp",
+          "x-ms-dataverse-type": "BigIntType",
+          "x-ms-schema-name": "EntityImage_Timestamp",
+          "x-ms-read-only": true
+        },
+        "entityimage_url": {
+          "type": "string",
+          "title": "entityimage_url",
+          "x-ms-dataverse-attribute": "entityimage_url",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "EntityImage_URL",
+          "x-ms-read-only": true,
+          "maxLength": 200
+        },
+        "entityimageid": {
+          "type": "string",
+          "title": "Entity Image Id",
+          "x-ms-dataverse-attribute": "entityimageid",
+          "x-ms-dataverse-type": "UniqueidentifierType",
+          "x-ms-schema-name": "EntityImageId",
+          "x-ms-read-only": true
+        },
+        "exchangerate": {
+          "type": "string",
+          "title": "Exchange Rate",
+          "x-ms-dataverse-attribute": "exchangerate",
+          "x-ms-dataverse-type": "DecimalType",
+          "x-ms-schema-name": "ExchangeRate",
+          "x-ms-read-only": true
+        },
+        "fiscalperiod": {
+          "type": "string",
+          "title": "Fiscal Period",
+          "x-ms-dataverse-attribute": "fiscalperiod",
+          "x-ms-dataverse-type": "PicklistType",
+          "x-ms-schema-name": "FiscalPeriod",
+          "enum": [
+            "Quarter 1",
+            "Quarter 2",
+            "Quarter 3",
+            "Quarter 4",
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+            "Semester 1",
+            "Semester 2",
+            "P1",
+            "P1",
+            "P2",
+            "P3",
+            "P4",
+            "P5",
+            "P6",
+            "P7",
+            "P8",
+            "P9",
+            "P10",
+            "P11",
+            "P12",
+            "P13"
+          ],
+          "x-ms-enum-values": [
+            1,
+            2,
+            3,
+            4,
+            101,
+            102,
+            103,
+            104,
+            105,
+            106,
+            107,
+            108,
+            109,
+            110,
+            111,
+            112,
+            201,
+            202,
+            301,
+            401,
+            402,
+            403,
+            404,
+            405,
+            406,
+            407,
+            408,
+            409,
+            410,
+            411,
+            412,
+            413
+          ],
+          "Color": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "1ae64055-f113-df11-a16e-00155d7aa40d",
+          "x-ms-isGlobal": true,
+          "x-ms-optionsetdisplayname": "Fiscal Period",
+          "x-ms-optionSetType": "Picklist"
+        },
+        "fiscalperiodname": {
+          "type": "string",
+          "title": "fiscalperiodname",
+          "x-ms-dataverse-attribute": "fiscalperiodname",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "fiscalperiodName",
+          "x-ms-read-only": true
+        },
+        "fiscalyear": {
+          "type": "string",
+          "title": "Budget Year",
+          "x-ms-dataverse-attribute": "fiscalyear",
+          "x-ms-dataverse-type": "PicklistType",
+          "x-ms-schema-name": "FiscalYear",
+          "enum": [
+            "FY2038",
+            "FY2037",
+            "FY2036",
+            "FY2035",
+            "FY2034",
+            "FY2033",
+            "FY2032",
+            "FY2031",
+            "FY2030",
+            "FY2029",
+            "FY2028",
+            "FY2027",
+            "FY2026",
+            "FY2025",
+            "FY2024",
+            "FY2023",
+            "FY2022",
+            "FY2021",
+            "FY2020",
+            "FY2019",
+            "FY2018",
+            "FY2017",
+            "FY2016",
+            "FY2015",
+            "FY2014",
+            "FY2013",
+            "FY2012",
+            "FY2011",
+            "FY2010",
+            "FY2009",
+            "FY2008",
+            "FY2007",
+            "FY2006",
+            "FY2005",
+            "FY2004",
+            "FY2003",
+            "FY2002",
+            "FY2001",
+            "FY2000",
+            "FY1999",
+            "FY1998",
+            "FY1997",
+            "FY1996",
+            "FY1995",
+            "FY1994",
+            "FY1993",
+            "FY1992",
+            "FY1991",
+            "FY1990",
+            "FY1989",
+            "FY1988",
+            "FY1987",
+            "FY1986",
+            "FY1985",
+            "FY1984",
+            "FY1983",
+            "FY1982",
+            "FY1981",
+            "FY1980",
+            "FY1979",
+            "FY1978",
+            "FY1977",
+            "FY1976",
+            "FY1975",
+            "FY1974",
+            "FY1973",
+            "FY1972",
+            "FY1971",
+            "FY1970"
+          ],
+          "x-ms-enum-values": [
+            2038,
+            2037,
+            2036,
+            2035,
+            2034,
+            2033,
+            2032,
+            2031,
+            2030,
+            2029,
+            2028,
+            2027,
+            2026,
+            2025,
+            2024,
+            2023,
+            2022,
+            2021,
+            2020,
+            2019,
+            2018,
+            2017,
+            2016,
+            2015,
+            2014,
+            2013,
+            2012,
+            2011,
+            2010,
+            2009,
+            2008,
+            2007,
+            2006,
+            2005,
+            2004,
+            2003,
+            2002,
+            2001,
+            2000,
+            1999,
+            1998,
+            1997,
+            1996,
+            1995,
+            1994,
+            1993,
+            1992,
+            1991,
+            1990,
+            1989,
+            1988,
+            1987,
+            1986,
+            1985,
+            1984,
+            1983,
+            1982,
+            1981,
+            1980,
+            1979,
+            1978,
+            1977,
+            1976,
+            1975,
+            1974,
+            1973,
+            1972,
+            1971,
+            1970
+          ],
+          "Color": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "9a55fd63-f113-df11-a16e-00155d7aa40d",
+          "x-ms-isGlobal": true,
+          "x-ms-optionsetdisplayname": "Fiscal Year",
+          "x-ms-optionSetType": "Picklist"
+        },
+        "fiscalyearname": {
+          "type": "string",
+          "title": "fiscalyearname",
+          "x-ms-dataverse-attribute": "fiscalyearname",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "fiscalyearName",
+          "x-ms-read-only": true
+        },
+        "fmi_adjustments": {
+          "type": "string",
+          "title": "Adjustments",
+          "x-ms-dataverse-attribute": "fmi_adjustments",
+          "x-ms-dataverse-type": "DecimalType",
+          "x-ms-schema-name": "fmi_adjustments"
+        },
+        "fmi_authorised": {
+          "type": "string",
+          "title": "Authorised",
+          "x-ms-dataverse-attribute": "fmi_authorised",
+          "x-ms-dataverse-type": "DecimalType",
+          "x-ms-schema-name": "fmi_authorised"
+        },
+        "fmi_authorisedsales": {
+          "type": "string",
+          "title": "Z_DONOTUSE_1",
+          "x-ms-dataverse-attribute": "fmi_authorisedsales",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_AuthorisedSales"
+        },
+        "fmi_authorisedsales_base": {
+          "type": "string",
+          "title": "Z_DONOTUSE_2",
+          "x-ms-dataverse-attribute": "fmi_authorisedsales_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_authorisedsales_Base",
+          "x-ms-read-only": true
+        },
+        "fmi_budgetstatus": {
+          "type": "string",
+          "title": "Budget Status",
+          "x-ms-dataverse-attribute": "fmi_budgetstatus",
+          "x-ms-dataverse-type": "PicklistType",
+          "x-ms-schema-name": "fmi_BudgetStatus",
+          "required": true,
+          "enum": [
+            "Finance Only Access",
+            "Locked",
+            "Budget with Exec",
+            "FC1 with Exec",
+            "FC2 with Exec",
+            "FC3 with Exec",
+            "FC1 with Finance",
+            "FC2 with Finance",
+            "FC3 with Finance"
+          ],
+          "x-ms-enum-values": [
+            652730001,
+            652730002,
+            797300001,
+            797300002,
+            797300003,
+            797300004,
+            797300005,
+            797300006,
+            797300007
+          ],
+          "Color": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "516721fe-160d-ef11-9f8a-0022480040a1",
+          "x-ms-isGlobal": true,
+          "x-ms-optionsetdisplayname": "Budget Status",
+          "x-ms-optionSetType": "Picklist"
+        },
+        "fmi_budgetstatusname": {
+          "type": "string",
+          "title": "fmi_budgetstatusname",
+          "x-ms-dataverse-attribute": "fmi_budgetstatusname",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "fmi_budgetstatusName",
+          "x-ms-read-only": true
+        },
+        "fmi_budgettype": {
+          "type": "string",
+          "title": "Budget Type",
+          "x-ms-dataverse-attribute": "fmi_budgettype",
+          "x-ms-dataverse-type": "PicklistType",
+          "x-ms-schema-name": "fmi_budgettype",
+          "enum": [
+            "Ancillary",
+            "Archive",
+            "FAST/AVOD",
+            "Format",
+            "Home Ent",
+            "Inflight",
+            "Tape"
+          ],
+          "x-ms-enum-values": [
+            797300000,
+            797300001,
+            797300002,
+            797300003,
+            797300004,
+            797300005,
+            797300006
+          ],
+          "Color": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "d545de3f-325f-41c3-9515-5099c48a0fbe",
+          "x-ms-isGlobal": true,
+          "x-ms-optionsetdisplayname": "Budget Type",
+          "x-ms-optionSetType": "Picklist"
+        },
+        "fmi_budgettypename": {
+          "type": "string",
+          "title": "fmi_budgettypename",
+          "x-ms-dataverse-attribute": "fmi_budgettypename",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "fmi_budgettypeName",
+          "x-ms-read-only": true
+        },
+        "fmi_businesswrittengroup": {
+          "type": "string",
+          "title": "Business Written Group",
+          "x-ms-dataverse-attribute": "fmi_businesswrittengroup",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "fmi_BusinessWrittenGroup",
+          "required": true
+        },
+        "fmi_businesswrittengroupname": {
+          "type": "string",
+          "title": "fmi_businesswrittengroupname",
+          "x-ms-dataverse-attribute": "fmi_businesswrittengroupname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "fmi_BusinessWrittenGroupName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "fmi_businesswrittenyear": {
+          "type": "string",
+          "title": "Business Written Year",
+          "x-ms-dataverse-attribute": "fmi_businesswrittenyear",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "fmi_BusinessWrittenYear",
+          "required": true
+        },
+        "fmi_businesswrittenyearname": {
+          "type": "string",
+          "title": "fmi_businesswrittenyearname",
+          "x-ms-dataverse-attribute": "fmi_businesswrittenyearname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "fmi_BusinessWrittenYearName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "fmi_bwterritory": {
+          "type": "string",
+          "title": "Business Written Territory",
+          "x-ms-dataverse-attribute": "fmi_bwterritory",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "fmi_BWTerritory",
+          "required": true
+        },
+        "fmi_bwterritoryname": {
+          "type": "string",
+          "title": "fmi_bwterritoryname",
+          "x-ms-dataverse-attribute": "fmi_bwterritoryname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "fmi_BWTerritoryName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "fmi_currentyearbudget": {
+          "type": "string",
+          "title": "Current Year Budget",
+          "x-ms-dataverse-attribute": "fmi_currentyearbudget",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_CurrentYearBudget"
+        },
+        "fmi_currentyearbudget_base": {
+          "type": "string",
+          "title": "Current Year Budget (Base)",
+          "x-ms-dataverse-attribute": "fmi_currentyearbudget_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_currentyearbudget_Base",
+          "x-ms-read-only": true
+        },
+        "fmi_currentyearbudgetgp": {
+          "type": "string",
+          "title": "Current Year Budget GP",
+          "x-ms-dataverse-attribute": "fmi_currentyearbudgetgp",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_CurrentYearBudgetGP"
+        },
+        "fmi_currentyearbudgetgp_base": {
+          "type": "string",
+          "title": "Current Year Budget GP (Base)",
+          "x-ms-dataverse-attribute": "fmi_currentyearbudgetgp_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_currentyearbudgetgp_Base",
+          "x-ms-read-only": true
+        },
+        "fmi_fc1": {
+          "type": "string",
+          "title": "FC1",
+          "x-ms-dataverse-attribute": "fmi_fc1",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_FC1"
+        },
+        "fmi_fc1_base": {
+          "type": "string",
+          "title": "FC1 (Base)",
+          "x-ms-dataverse-attribute": "fmi_fc1_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_fc1_Base",
+          "x-ms-read-only": true
+        },
+        "fmi_fc1gp": {
+          "type": "string",
+          "title": "FC1 GP",
+          "x-ms-dataverse-attribute": "fmi_fc1gp",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_FC1GP"
+        },
+        "fmi_fc1gp_base": {
+          "type": "string",
+          "title": "FC1 GP (Base)",
+          "x-ms-dataverse-attribute": "fmi_fc1gp_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_fc1gp_Base",
+          "x-ms-read-only": true
+        },
+        "fmi_fc2": {
+          "type": "string",
+          "title": "FC2",
+          "x-ms-dataverse-attribute": "fmi_fc2",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_FC2"
+        },
+        "fmi_fc2_base": {
+          "type": "string",
+          "title": "FC2 (Base)",
+          "x-ms-dataverse-attribute": "fmi_fc2_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_fc2_Base",
+          "x-ms-read-only": true
+        },
+        "fmi_fc2gp": {
+          "type": "string",
+          "title": "FC2 GP",
+          "x-ms-dataverse-attribute": "fmi_fc2gp",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_FC2GP"
+        },
+        "fmi_fc2gp_base": {
+          "type": "string",
+          "title": "FC2 GP (Base)",
+          "x-ms-dataverse-attribute": "fmi_fc2gp_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_fc2gp_Base",
+          "x-ms-read-only": true
+        },
+        "fmi_fc3": {
+          "type": "string",
+          "title": "FC3",
+          "x-ms-dataverse-attribute": "fmi_fc3",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_FC3"
+        },
+        "fmi_fc3_base": {
+          "type": "string",
+          "title": "FC3 (Base)",
+          "x-ms-dataverse-attribute": "fmi_fc3_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_fc3_Base",
+          "x-ms-read-only": true
+        },
+        "fmi_fc3gp": {
+          "type": "string",
+          "title": "FC3 GP",
+          "x-ms-dataverse-attribute": "fmi_fc3gp",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_FC3GP"
+        },
+        "fmi_fc3gp_base": {
+          "type": "string",
+          "title": "FC3 GP (Base)",
+          "x-ms-dataverse-attribute": "fmi_fc3gp_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_fc3gp_Base",
+          "x-ms-read-only": true
+        },
+        "fmi_nextbudgetlookup": {
+          "type": "string",
+          "title": "Next Budget Lookup",
+          "x-ms-dataverse-attribute": "fmi_nextbudgetlookup",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "fmi_nextbudgetlookup"
+        },
+        "fmi_nextbudgetlookupname": {
+          "type": "string",
+          "title": "fmi_nextbudgetlookupname",
+          "x-ms-dataverse-attribute": "fmi_nextbudgetlookupname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "fmi_nextbudgetlookupName",
+          "x-ms-read-only": true,
+          "maxLength": 210
+        },
+        "fmi_nextyearbudget": {
+          "type": "string",
+          "title": "Next Year Budget",
+          "x-ms-dataverse-attribute": "fmi_nextyearbudget",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_NextYearBudget"
+        },
+        "fmi_nextyearbudget_base": {
+          "type": "string",
+          "title": "Next Year Budget (Base)",
+          "x-ms-dataverse-attribute": "fmi_nextyearbudget_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_nextyearbudget_Base",
+          "x-ms-read-only": true
+        },
+        "fmi_nextyearbudgetgp": {
+          "type": "string",
+          "title": "Next Year Budget GP",
+          "x-ms-dataverse-attribute": "fmi_nextyearbudgetgp",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_NextYearBudgetGP"
+        },
+        "fmi_nextyearbudgetgp_base": {
+          "type": "string",
+          "title": "Next Year Budget GP (Base)",
+          "x-ms-dataverse-attribute": "fmi_nextyearbudgetgp_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_nextyearbudgetgp_Base",
+          "x-ms-read-only": true
+        },
+        "fmi_notes": {
+          "type": "string",
+          "title": "Notes",
+          "x-ms-dataverse-attribute": "fmi_notes",
+          "x-ms-dataverse-type": "MemoType",
+          "x-ms-schema-name": "fmi_Notes",
+          "maxLength": 3000
+        },
+        "fmi_previousbudgetlookup": {
+          "type": "string",
+          "title": "Previous Budget Lookup",
+          "x-ms-dataverse-attribute": "fmi_previousbudgetlookup",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "fmi_previousbudgetlookup"
+        },
+        "fmi_previousbudgetlookupname": {
+          "type": "string",
+          "title": "fmi_previousbudgetlookupname",
+          "x-ms-dataverse-attribute": "fmi_previousbudgetlookupname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "fmi_previousbudgetlookupName",
+          "x-ms-read-only": true,
+          "maxLength": 210
+        },
+        "fmi_previousyearbudget": {
+          "type": "string",
+          "title": "Previous Year BW",
+          "x-ms-dataverse-attribute": "fmi_previousyearbudget",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_previousyearbudget"
+        },
+        "fmi_previousyearbudget_base": {
+          "type": "string",
+          "title": "Previous Year BW (Base)",
+          "x-ms-dataverse-attribute": "fmi_previousyearbudget_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_previousyearbudget_Base",
+          "x-ms-read-only": true
+        },
+        "fmi_submitteddate": {
+          "type": "string",
+          "title": "Submitted Date",
+          "x-ms-dataverse-attribute": "fmi_submitteddate",
+          "x-ms-dataverse-type": "DateTimeType",
+          "x-ms-schema-name": "fmi_submitteddate"
+        },
+        "fmi_team": {
+          "type": "string",
+          "title": "Team",
+          "x-ms-dataverse-attribute": "fmi_team",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "fmi_Team"
+        },
+        "fmi_teamname": {
+          "type": "string",
+          "title": "fmi_teamname",
+          "x-ms-dataverse-attribute": "fmi_teamname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "fmi_TeamName",
+          "x-ms-read-only": true,
+          "maxLength": 160
+        },
+        "fmi_teamyominame": {
+          "type": "string",
+          "title": "fmi_teamyominame",
+          "x-ms-dataverse-attribute": "fmi_teamyominame",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "fmi_TeamYomiName",
+          "x-ms-read-only": true,
+          "maxLength": 160
+        },
+        "fmi_todo": {
+          "type": "string",
+          "title": "To Do",
+          "x-ms-dataverse-attribute": "fmi_todo",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_ToDo"
+        },
+        "fmi_todo_base": {
+          "type": "string",
+          "title": "To Do (Base)",
+          "x-ms-dataverse-attribute": "fmi_todo_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_todo_Base",
+          "x-ms-read-only": true
+        },
+        "fmi_todofc": {
+          "type": "string",
+          "title": "To Do FC",
+          "x-ms-dataverse-attribute": "fmi_todofc",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_ToDoFC"
+        },
+        "fmi_todofc_base": {
+          "type": "string",
+          "title": "To Do FC (Base)",
+          "x-ms-dataverse-attribute": "fmi_todofc_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_todofc_Base",
+          "x-ms-read-only": true
+        },
+        "fmi_totalbusinesswritten": {
+          "type": "string",
+          "title": "Z_DONOTUSE_3",
+          "x-ms-dataverse-attribute": "fmi_totalbusinesswritten",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_TotalBusinessWritten"
+        },
+        "fmi_totalbusinesswritten_base": {
+          "type": "string",
+          "title": "Z_DONOTUSE_4",
+          "x-ms-dataverse-attribute": "fmi_totalbusinesswritten_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_totalbusinesswritten_Base",
+          "x-ms-read-only": true
+        },
+        "fmi_unauthorised": {
+          "type": "string",
+          "title": "Unauthorised",
+          "x-ms-dataverse-attribute": "fmi_unauthorised",
+          "x-ms-dataverse-type": "DecimalType",
+          "x-ms-schema-name": "fmi_unauthorised"
+        },
+        "fmi_unauthorisedsales": {
+          "type": "string",
+          "title": "Z_DONOTUSE_5",
+          "x-ms-dataverse-attribute": "fmi_unauthorisedsales",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_UnauthorisedSales"
+        },
+        "fmi_unauthorisedsales_base": {
+          "type": "string",
+          "title": "Z_DONOTUSE_6",
+          "x-ms-dataverse-attribute": "fmi_unauthorisedsales_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "fmi_unauthorisedsales_Base",
+          "x-ms-read-only": true
+        },
+        "goalenddate": {
+          "type": "string",
+          "title": "To",
+          "x-ms-dataverse-attribute": "goalenddate",
+          "x-ms-dataverse-type": "DateTimeType",
+          "x-ms-schema-name": "GoalEndDate"
+        },
+        "goalid": {
+          "type": "string",
+          "title": "Budget",
+          "x-ms-dataverse-attribute": "goalid",
+          "x-ms-dataverse-type": "UniqueidentifierType",
+          "x-ms-schema-name": "GoalId",
+          "x-ms-dataverse-primary-id": true,
+          "required": true,
+          "x-ms-keyType": "primary"
+        },
+        "goalownerid": {
+          "type": "string",
+          "title": "Budget Owner",
+          "x-ms-dataverse-attribute": "goalownerid",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "GoalOwnerId",
+          "required": true
+        },
+        "goalowneridname": {
+          "type": "string",
+          "title": "goalowneridname",
+          "x-ms-dataverse-attribute": "goalowneridname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "GoalOwnerIdName",
+          "x-ms-read-only": true,
+          "required": true,
+          "maxLength": 160
+        },
+        "goalowneridtype": {
+          "type": "string",
+          "title": "Budget Owner Type",
+          "x-ms-dataverse-attribute": "goalowneridtype",
+          "x-ms-dataverse-type": "EntityNameType",
+          "x-ms-schema-name": "GoalOwnerIdType",
+          "required": true
+        },
+        "goalowneridyominame": {
+          "type": "string",
+          "title": "goalowneridyominame",
+          "x-ms-dataverse-attribute": "goalowneridyominame",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "GoalOwnerIdYomiName",
+          "x-ms-read-only": true,
+          "required": true,
+          "maxLength": 160
+        },
+        "goalstartdate": {
+          "type": "string",
+          "title": "From",
+          "x-ms-dataverse-attribute": "goalstartdate",
+          "x-ms-dataverse-type": "DateTimeType",
+          "x-ms-schema-name": "GoalStartDate"
+        },
+        "goalwitherrorid": {
+          "type": "string",
+          "title": "Budget With Error",
+          "x-ms-dataverse-attribute": "goalwitherrorid",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "GoalWithErrorId"
+        },
+        "goalwitherroridname": {
+          "type": "string",
+          "title": "goalwitherroridname",
+          "x-ms-dataverse-attribute": "goalwitherroridname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "GoalWithErrorIdName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "importsequencenumber": {
+          "type": "string",
+          "title": "Import Sequence Number",
+          "x-ms-dataverse-attribute": "importsequencenumber",
+          "x-ms-dataverse-type": "IntegerType",
+          "x-ms-schema-name": "ImportSequenceNumber"
+        },
+        "inprogressdecimal": {
+          "type": "string",
+          "title": "In-progress (Decimal)",
+          "x-ms-dataverse-attribute": "inprogressdecimal",
+          "x-ms-dataverse-type": "DecimalType",
+          "x-ms-schema-name": "InProgressDecimal"
+        },
+        "inprogressinteger": {
+          "type": "string",
+          "title": "In-progress (Integer)",
+          "x-ms-dataverse-attribute": "inprogressinteger",
+          "x-ms-dataverse-type": "IntegerType",
+          "x-ms-schema-name": "InProgressInteger"
+        },
+        "inprogressmoney": {
+          "type": "string",
+          "title": "In-progress (Money)",
+          "x-ms-dataverse-attribute": "inprogressmoney",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "InProgressMoney"
+        },
+        "inprogressmoney_base": {
+          "type": "string",
+          "title": "In-progress (Money) (Base)",
+          "x-ms-dataverse-attribute": "inprogressmoney_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "InProgressMoney_Base",
+          "x-ms-read-only": true
+        },
+        "inprogressstring": {
+          "type": "string",
+          "title": "In-Progress",
+          "x-ms-dataverse-attribute": "inprogressstring",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "InProgressString",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "isamount": {
+          "type": "string",
+          "title": "Metric Type",
+          "x-ms-dataverse-attribute": "isamount",
+          "x-ms-dataverse-type": "BooleanType",
+          "x-ms-schema-name": "IsAmount",
+          "required": true,
+          "enum": [
+            "Count",
+            "Amount"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1
+          ],
+          "Color": [
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "4c134c3c-c9eb-4169-9c8a-ce80884a7138",
+          "x-ms-isGlobal": true,
+          "x-ms-optionsetdisplayname": "Metric Type",
+          "x-ms-optionSetType": "Boolean"
+        },
+        "isamountname": {
+          "type": "string",
+          "title": "isamountname",
+          "x-ms-dataverse-attribute": "isamountname",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "IsAmountName",
+          "x-ms-read-only": true
+        },
+        "isfiscalperiodgoal": {
+          "type": "string",
+          "title": "Budget Period Type",
+          "x-ms-dataverse-attribute": "isfiscalperiodgoal",
+          "x-ms-dataverse-type": "BooleanType",
+          "x-ms-schema-name": "IsFiscalPeriodGoal",
+          "enum": [
+            "Custom Period",
+            "Fiscal Period"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1
+          ],
+          "Color": [
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "67d1e8ae-2b1a-df11-a959-00155d26c21d",
+          "x-ms-isGlobal": false,
+          "x-ms-optionsetdisplayname": "Budget Period Type",
+          "x-ms-optionSetType": "Boolean"
+        },
+        "isfiscalperiodgoalname": {
+          "type": "string",
+          "title": "isfiscalperiodgoalname",
+          "x-ms-dataverse-attribute": "isfiscalperiodgoalname",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "IsFiscalPeriodGoalName",
+          "x-ms-read-only": true
+        },
+        "isoverridden": {
+          "type": "string",
+          "title": "Overridden",
+          "x-ms-dataverse-attribute": "isoverridden",
+          "x-ms-dataverse-type": "BooleanType",
+          "x-ms-schema-name": "IsOverridden",
+          "enum": [
+            "No",
+            "Yes"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1
+          ],
+          "Color": [
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "627a64b9-22e3-45ba-ac91-bc740dc8adf3",
+          "x-ms-isGlobal": false,
+          "x-ms-optionsetdisplayname": "Is budget rollup data overridden",
+          "x-ms-optionSetType": "Boolean"
+        },
+        "isoverriddenname": {
+          "type": "string",
+          "title": "isoverriddenname",
+          "x-ms-dataverse-attribute": "isoverriddenname",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "IsOverriddenName",
+          "x-ms-read-only": true
+        },
+        "isoverride": {
+          "type": "string",
+          "title": "Override",
+          "x-ms-dataverse-attribute": "isoverride",
+          "x-ms-dataverse-type": "BooleanType",
+          "x-ms-schema-name": "IsOverride",
+          "enum": [
+            "No",
+            "Yes"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1
+          ],
+          "Color": [
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "9f02926d-6986-40d6-8b71-820f62d9495e",
+          "x-ms-isGlobal": false,
+          "x-ms-optionsetdisplayname": "Override budget rollup data",
+          "x-ms-optionSetType": "Boolean"
+        },
+        "isoverridename": {
+          "type": "string",
+          "title": "isoverridename",
+          "x-ms-dataverse-attribute": "isoverridename",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "IsOverrideName",
+          "x-ms-read-only": true
+        },
+        "lastrolledupdate": {
+          "type": "string",
+          "title": "Last Rolled Up Date",
+          "x-ms-dataverse-attribute": "lastrolledupdate",
+          "x-ms-dataverse-type": "DateTimeType",
+          "x-ms-schema-name": "LastRolledupDate"
+        },
+        "metricid": {
+          "type": "string",
+          "title": "Budget Metric",
+          "x-ms-dataverse-attribute": "metricid",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "MetricId",
+          "required": true
+        },
+        "metricidname": {
+          "type": "string",
+          "title": "metricidname",
+          "x-ms-dataverse-attribute": "metricidname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "MetricIdName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "modifiedby": {
+          "type": "string",
+          "title": "Modified By",
+          "x-ms-dataverse-attribute": "modifiedby",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "ModifiedBy",
+          "x-ms-read-only": true
+        },
+        "modifiedbyname": {
+          "type": "string",
+          "title": "modifiedbyname",
+          "x-ms-dataverse-attribute": "modifiedbyname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "ModifiedByName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "modifiedon": {
+          "type": "string",
+          "title": "Modified On",
+          "x-ms-dataverse-attribute": "modifiedon",
+          "x-ms-dataverse-type": "DateTimeType",
+          "x-ms-schema-name": "ModifiedOn",
+          "x-ms-read-only": true
+        },
+        "modifiedonbehalfby": {
+          "type": "string",
+          "title": "Modified By (Delegate)",
+          "x-ms-dataverse-attribute": "modifiedonbehalfby",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "ModifiedOnBehalfBy",
+          "x-ms-read-only": true
+        },
+        "modifiedonbehalfbyname": {
+          "type": "string",
+          "title": "modifiedonbehalfbyname",
+          "x-ms-dataverse-attribute": "modifiedonbehalfbyname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "ModifiedOnBehalfByName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "modifiedonbehalfbyyominame": {
+          "type": "string",
+          "title": "modifiedonbehalfbyyominame",
+          "x-ms-dataverse-attribute": "modifiedonbehalfbyyominame",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "ModifiedOnBehalfByYomiName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "overriddencreatedon": {
+          "type": "string",
+          "title": "Record Created On",
+          "x-ms-dataverse-attribute": "overriddencreatedon",
+          "x-ms-dataverse-type": "DateTimeType",
+          "x-ms-schema-name": "OverriddenCreatedOn"
+        },
+        "ownerid": {
+          "type": "string",
+          "title": "Manager",
+          "x-ms-dataverse-attribute": "ownerid",
+          "x-ms-dataverse-type": "OwnerType",
+          "x-ms-schema-name": "OwnerId",
+          "required": true
+        },
+        "owneridname": {
+          "type": "string",
+          "title": "owneridname",
+          "x-ms-dataverse-attribute": "owneridname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "OwnerIdName",
+          "x-ms-read-only": true,
+          "required": true,
+          "maxLength": 100
+        },
+        "owneridtype": {
+          "type": "string",
+          "title": "owneridtype",
+          "x-ms-dataverse-attribute": "owneridtype",
+          "x-ms-dataverse-type": "EntityNameType",
+          "x-ms-schema-name": "OwnerIdType",
+          "required": true
+        },
+        "owneridyominame": {
+          "type": "string",
+          "title": "owneridyominame",
+          "x-ms-dataverse-attribute": "owneridyominame",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "OwnerIdYomiName",
+          "x-ms-read-only": true,
+          "required": true,
+          "maxLength": 100
+        },
+        "owningbusinessunit": {
+          "type": "string",
+          "title": "Owning Business Unit",
+          "x-ms-dataverse-attribute": "owningbusinessunit",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "OwningBusinessUnit",
+          "x-ms-read-only": true
+        },
+        "owningbusinessunitname": {
+          "type": "string",
+          "title": "owningbusinessunitname",
+          "x-ms-dataverse-attribute": "owningbusinessunitname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "OwningBusinessUnitName",
+          "x-ms-read-only": true,
+          "maxLength": 160
+        },
+        "owningteam": {
+          "type": "string",
+          "title": "Owning Team",
+          "x-ms-dataverse-attribute": "owningteam",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "OwningTeam",
+          "x-ms-read-only": true
+        },
+        "owninguser": {
+          "type": "string",
+          "title": "Owning User",
+          "x-ms-dataverse-attribute": "owninguser",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "OwningUser",
+          "x-ms-read-only": true
+        },
+        "parentgoalid": {
+          "type": "string",
+          "title": "Parent Budget",
+          "x-ms-dataverse-attribute": "parentgoalid",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "ParentGoalId"
+        },
+        "parentgoalidname": {
+          "type": "string",
+          "title": "parentgoalidname",
+          "x-ms-dataverse-attribute": "parentgoalidname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "ParentGoalIdName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "percentage": {
+          "type": "string",
+          "title": "Percentage Achieved",
+          "x-ms-dataverse-attribute": "percentage",
+          "x-ms-dataverse-type": "DecimalType",
+          "x-ms-schema-name": "Percentage"
+        },
+        "rolluperrorcode": {
+          "type": "string",
+          "title": "Rollup Error Code",
+          "x-ms-dataverse-attribute": "rolluperrorcode",
+          "x-ms-dataverse-type": "IntegerType",
+          "x-ms-schema-name": "RollupErrorCode"
+        },
+        "rolluponlyfromchildgoals": {
+          "type": "string",
+          "title": "Roll Up Only from Child Budgets",
+          "x-ms-dataverse-attribute": "rolluponlyfromchildgoals",
+          "x-ms-dataverse-type": "BooleanType",
+          "x-ms-schema-name": "RollupOnlyFromChildGoals",
+          "required": true,
+          "enum": [
+            "No",
+            "Yes"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1
+          ],
+          "Color": [
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "8678eeec-de2c-df11-92a7-00155d2e8601",
+          "x-ms-isGlobal": false,
+          "x-ms-optionsetdisplayname": "Rollup only from child budgets",
+          "x-ms-optionSetType": "Boolean"
+        },
+        "rolluponlyfromchildgoalsname": {
+          "type": "string",
+          "title": "rolluponlyfromchildgoalsname",
+          "x-ms-dataverse-attribute": "rolluponlyfromchildgoalsname",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "RollupOnlyFromChildGoalsName",
+          "x-ms-read-only": true
+        },
+        "rollupqueryactualdecimalid": {
+          "type": "string",
+          "title": "Rollup Query - Actual(Decimal)",
+          "x-ms-dataverse-attribute": "rollupqueryactualdecimalid",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "RollUpQueryActualDecimalId"
+        },
+        "rollupqueryactualdecimalidname": {
+          "type": "string",
+          "title": "rollupqueryactualdecimalidname",
+          "x-ms-dataverse-attribute": "rollupqueryactualdecimalidname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "RollUpQueryActualDecimalIdName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "rollupqueryactualintegerid": {
+          "type": "string",
+          "title": "Rollup Query - Actual(Integer)",
+          "x-ms-dataverse-attribute": "rollupqueryactualintegerid",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "RollupQueryActualIntegerId"
+        },
+        "rollupqueryactualintegeridname": {
+          "type": "string",
+          "title": "rollupqueryactualintegeridname",
+          "x-ms-dataverse-attribute": "rollupqueryactualintegeridname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "RollupQueryActualIntegerIdName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "rollupqueryactualmoneyid": {
+          "type": "string",
+          "title": "Rollup Query - Actual(Money)",
+          "x-ms-dataverse-attribute": "rollupqueryactualmoneyid",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "RollUpQueryActualMoneyId"
+        },
+        "rollupqueryactualmoneyidname": {
+          "type": "string",
+          "title": "rollupqueryactualmoneyidname",
+          "x-ms-dataverse-attribute": "rollupqueryactualmoneyidname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "RollUpQueryActualMoneyIdName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "rollupquerycustomdecimalid": {
+          "type": "string",
+          "title": "Rollup Query - Custom Rollup Field (Decimal)",
+          "x-ms-dataverse-attribute": "rollupquerycustomdecimalid",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "RollUpQueryCustomDecimalId"
+        },
+        "rollupquerycustomdecimalidname": {
+          "type": "string",
+          "title": "rollupquerycustomdecimalidname",
+          "x-ms-dataverse-attribute": "rollupquerycustomdecimalidname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "RollUpQueryCustomDecimalIdName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "rollupquerycustomintegerid": {
+          "type": "string",
+          "title": "Rollup Query - Custom Rollup Field (Integer)",
+          "x-ms-dataverse-attribute": "rollupquerycustomintegerid",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "RollUpQueryCustomIntegerId"
+        },
+        "rollupquerycustomintegeridname": {
+          "type": "string",
+          "title": "rollupquerycustomintegeridname",
+          "x-ms-dataverse-attribute": "rollupquerycustomintegeridname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "RollUpQueryCustomIntegerIdName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "rollupquerycustommoneyid": {
+          "type": "string",
+          "title": "Rollup Query - Custom Rollup Field (Money)",
+          "x-ms-dataverse-attribute": "rollupquerycustommoneyid",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "RollUpQueryCustomMoneyId"
+        },
+        "rollupquerycustommoneyidname": {
+          "type": "string",
+          "title": "rollupquerycustommoneyidname",
+          "x-ms-dataverse-attribute": "rollupquerycustommoneyidname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "RollUpQueryCustomMoneyIdName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "rollupqueryinprogressdecimalid": {
+          "type": "string",
+          "title": "Rollup Query - In-progress(Decimal)",
+          "x-ms-dataverse-attribute": "rollupqueryinprogressdecimalid",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "RollUpQueryInprogressDecimalId"
+        },
+        "rollupqueryinprogressdecimalidname": {
+          "type": "string",
+          "title": "rollupqueryinprogressdecimalidname",
+          "x-ms-dataverse-attribute": "rollupqueryinprogressdecimalidname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "RollUpQueryInprogressDecimalIdName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "rollupqueryinprogressintegerid": {
+          "type": "string",
+          "title": "Rollup Query - In-progress(Integer)",
+          "x-ms-dataverse-attribute": "rollupqueryinprogressintegerid",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "RollUpQueryInprogressIntegerId"
+        },
+        "rollupqueryinprogressintegeridname": {
+          "type": "string",
+          "title": "rollupqueryinprogressintegeridname",
+          "x-ms-dataverse-attribute": "rollupqueryinprogressintegeridname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "RollUpQueryInprogressIntegerIdName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "rollupqueryinprogressmoneyid": {
+          "type": "string",
+          "title": "Rollup Query - In-progress(Money)",
+          "x-ms-dataverse-attribute": "rollupqueryinprogressmoneyid",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "RollUpQueryInprogressMoneyId"
+        },
+        "rollupqueryinprogressmoneyidname": {
+          "type": "string",
+          "title": "rollupqueryinprogressmoneyidname",
+          "x-ms-dataverse-attribute": "rollupqueryinprogressmoneyidname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "RollUpQueryInprogressMoneyIdName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "statecode": {
+          "type": "string",
+          "title": "Status",
+          "x-ms-dataverse-attribute": "statecode",
+          "x-ms-dataverse-type": "StateType",
+          "x-ms-schema-name": "StateCode",
+          "required": true,
+          "enum": [
+            "Active",
+            "Inactive"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1
+          ],
+          "Color": [
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "2c24b4bd-f013-df11-a16e-00155d7aa40d",
+          "x-ms-isGlobal": false,
+          "x-ms-optionsetdisplayname": "Status",
+          "x-ms-optionSetType": "State"
+        },
+        "statecodename": {
+          "type": "string",
+          "title": "statecodename",
+          "x-ms-dataverse-attribute": "statecodename",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "StateCodeName",
+          "x-ms-read-only": true
+        },
+        "statuscode": {
+          "type": "string",
+          "title": "Status Reason",
+          "x-ms-dataverse-attribute": "statuscode",
+          "x-ms-dataverse-type": "StatusType",
+          "x-ms-schema-name": "StatusCode",
+          "enum": [
+            "Open",
+            "Closed",
+            "Discarded"
+          ],
+          "x-ms-enum-values": [
+            0,
+            1,
+            2
+          ],
+          "Color": [
+            null,
+            null,
+            null
+          ],
+          "x-ms-optionsetmetadataid": "3624b4bd-f013-df11-a16e-00155d7aa40d",
+          "x-ms-isGlobal": false,
+          "x-ms-optionsetdisplayname": "Status Reason",
+          "x-ms-optionSetType": "Status"
+        },
+        "statuscodename": {
+          "type": "string",
+          "title": "statuscodename",
+          "x-ms-dataverse-attribute": "statuscodename",
+          "x-ms-dataverse-type": "VirtualType",
+          "x-ms-schema-name": "StatusCodeName",
+          "x-ms-read-only": true
+        },
+        "stretchtargetdecimal": {
+          "type": "string",
+          "title": "Stretch Target (Decimal)",
+          "x-ms-dataverse-attribute": "stretchtargetdecimal",
+          "x-ms-dataverse-type": "DecimalType",
+          "x-ms-schema-name": "StretchTargetDecimal"
+        },
+        "stretchtargetinteger": {
+          "type": "string",
+          "title": "Stretch Target (Integer)",
+          "x-ms-dataverse-attribute": "stretchtargetinteger",
+          "x-ms-dataverse-type": "IntegerType",
+          "x-ms-schema-name": "StretchTargetInteger"
+        },
+        "stretchtargetmoney": {
+          "type": "string",
+          "title": "Stretch Target (Money)",
+          "x-ms-dataverse-attribute": "stretchtargetmoney",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "StretchTargetMoney"
+        },
+        "stretchtargetmoney_base": {
+          "type": "string",
+          "title": "Stretch Target (Money) (Base)",
+          "x-ms-dataverse-attribute": "stretchtargetmoney_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "StretchTargetMoney_Base",
+          "x-ms-read-only": true
+        },
+        "stretchtargetstring": {
+          "type": "string",
+          "title": "Stretched Target",
+          "x-ms-dataverse-attribute": "stretchtargetstring",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "StretchTargetString",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "targetdecimal": {
+          "type": "string",
+          "title": "Target (Decimal)",
+          "x-ms-dataverse-attribute": "targetdecimal",
+          "x-ms-dataverse-type": "DecimalType",
+          "x-ms-schema-name": "TargetDecimal"
+        },
+        "targetinteger": {
+          "type": "string",
+          "title": "Target (Integer)",
+          "x-ms-dataverse-attribute": "targetinteger",
+          "x-ms-dataverse-type": "IntegerType",
+          "x-ms-schema-name": "TargetInteger"
+        },
+        "targetmoney": {
+          "type": "string",
+          "title": "Target (Money)",
+          "x-ms-dataverse-attribute": "targetmoney",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "TargetMoney"
+        },
+        "targetmoney_base": {
+          "type": "string",
+          "title": "Target (Money) (Base)",
+          "x-ms-dataverse-attribute": "targetmoney_base",
+          "x-ms-dataverse-type": "MoneyType",
+          "x-ms-schema-name": "TargetMoney_Base",
+          "x-ms-read-only": true
+        },
+        "targetstring": {
+          "type": "string",
+          "title": "Target",
+          "x-ms-dataverse-attribute": "targetstring",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "TargetString",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "timezoneruleversionnumber": {
+          "type": "string",
+          "title": "Time Zone Rule Version Number",
+          "x-ms-dataverse-attribute": "timezoneruleversionnumber",
+          "x-ms-dataverse-type": "IntegerType",
+          "x-ms-schema-name": "TimeZoneRuleVersionNumber"
+        },
+        "title": {
+          "type": "string",
+          "title": "Name",
+          "x-ms-dataverse-attribute": "title",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "Title",
+          "x-ms-dataverse-primary-name": true,
+          "required": true,
+          "maxLength": 210
+        },
+        "transactioncurrencyid": {
+          "type": "string",
+          "title": "Currency",
+          "x-ms-dataverse-attribute": "transactioncurrencyid",
+          "x-ms-dataverse-type": "LookupType",
+          "x-ms-schema-name": "TransactionCurrencyId",
+          "x-ms-read-only": true
+        },
+        "transactioncurrencyidname": {
+          "type": "string",
+          "title": "transactioncurrencyidname",
+          "x-ms-dataverse-attribute": "transactioncurrencyidname",
+          "x-ms-dataverse-type": "StringType",
+          "x-ms-schema-name": "TransactionCurrencyIdName",
+          "x-ms-read-only": true,
+          "maxLength": 100
+        },
+        "treeid": {
+          "type": "string",
+          "title": "Tree ID",
+          "x-ms-dataverse-attribute": "treeid",
+          "x-ms-dataverse-type": "UniqueidentifierType",
+          "x-ms-schema-name": "TreeId",
+          "x-ms-read-only": true
+        },
+        "utcconversiontimezonecode": {
+          "type": "string",
+          "title": "UTC Conversion Time Zone Code",
+          "x-ms-dataverse-attribute": "utcconversiontimezonecode",
+          "x-ms-dataverse-type": "IntegerType",
+          "x-ms-schema-name": "UTCConversionTimeZoneCode"
+        },
+        "versionnumber": {
+          "type": "string",
+          "title": "Version Number",
+          "x-ms-dataverse-attribute": "versionnumber",
+          "x-ms-dataverse-type": "BigIntType",
+          "x-ms-schema-name": "VersionNumber",
+          "x-ms-read-only": true
+        }
+      },
+      "required": [
+        "consideronlygoalownersrecords",
+        "fmi_budgetstatus",
+        "fmi_businesswrittengroup",
+        "fmi_businesswrittenyear",
+        "fmi_bwterritory",
+        "goalid",
+        "goalownerid",
+        "goalowneridname",
+        "goalowneridtype",
+        "goalowneridyominame",
+        "isamount",
+        "metricid",
+        "ownerid",
+        "owneridname",
+        "owneridtype",
+        "owneridyominame",
+        "rolluponlyfromchildgoals",
+        "statecode",
+        "title"
+      ]
+    }
+  }
+}

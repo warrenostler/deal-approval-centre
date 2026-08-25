@@ -6,26 +6,34 @@
 // Models
 export * as AccountsModel from './models/AccountsModel';
 export * as CommonModels from './models/CommonModels';
+export * as Fmi_GetDealApprovalPreviewModel from './models/Fmi_GetDealApprovalPreviewModel';
 export * as Fmi_GetPendingDealApprovalsModel from './models/Fmi_GetPendingDealApprovalsModel';
 export * as Fmi_ProcessDealApprovalDecisionModel from './models/Fmi_ProcessDealApprovalDecisionModel';
+export * as Fmi_SubmitDealApprovalModel from './models/Fmi_SubmitDealApprovalModel';
+export * as Fmi_businesswrittengroupsModel from './models/Fmi_businesswrittengroupsModel';
 export * as Fmi_businesswrittenyearsModel from './models/Fmi_businesswrittenyearsModel';
 export * as Fmi_contentsModel from './models/Fmi_contentsModel';
 export * as Fmi_dealapprovalitemsModel from './models/Fmi_dealapprovalitemsModel';
 export * as Fmi_dealapprovalsModel from './models/Fmi_dealapprovalsModel';
 export * as Fmi_opportunityitemsModel from './models/Fmi_opportunityitemsModel';
 export * as Fmi_targetterritoriesModel from './models/Fmi_targetterritoriesModel';
+export * as GoalsModel from './models/GoalsModel';
 export * as OpportunitiesModel from './models/OpportunitiesModel';
 export * as SystemusersModel from './models/SystemusersModel';
 
 // Services
 export * from './services/AccountsService';
+export * from './services/Fmi_GetDealApprovalPreviewService';
 export * from './services/Fmi_GetPendingDealApprovalsService';
 export * from './services/Fmi_ProcessDealApprovalDecisionService';
+export * from './services/Fmi_SubmitDealApprovalService';
+export * from './services/Fmi_businesswrittengroupsService';
 export * from './services/Fmi_businesswrittenyearsService';
 export * from './services/Fmi_contentsService';
 export * from './services/Fmi_dealapprovalitemsService';
 export * from './services/Fmi_dealapprovalsService';
 export * from './services/Fmi_opportunityitemsService';
 export * from './services/Fmi_targetterritoriesService';
+export * from './services/GoalsService';
 export * from './services/OpportunitiesService';
 export * from './services/SystemusersService';

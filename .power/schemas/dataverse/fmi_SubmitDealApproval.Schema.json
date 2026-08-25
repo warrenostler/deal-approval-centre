@@ -1,0 +1,51 @@
+{
+  "name": "fmi_SubmitDealApproval",
+  "title": "fmi_SubmitDealApproval",
+  "type": "Microsoft.PowerApps/dataverseOperation",
+  "properties": {
+    "displayName": "fmi_SubmitDealApproval",
+    "swagger": {
+      "swagger": "2.0",
+      "info": {
+        "title": "fmi_SubmitDealApproval",
+        "version": "1.0"
+      },
+      "basePath": "/api/data/v9.2",
+      "paths": {
+        "/fmi_SubmitDealApproval": {
+          "post": {
+            "operationId": "fmi_SubmitDealApproval",
+            "parameters": [
+              {
+                "name": "OpportunityId",
+                "in": "body",
+                "required": true,
+                "type": "string",
+                "x-ms-dataverse-type": "UniqueidentifierType",
+                "x-ms-csdl-type": "Edm.Guid"
+              },
+              {
+                "name": "CoordinatorComment",
+                "in": "body",
+                "required": false,
+                "type": "string",
+                "x-ms-dataverse-type": "StringType",
+                "x-ms-csdl-type": "Edm.String"
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "Success",
+                "schema": {
+                  "type": "object",
+                  "x-ms-dataverse-type": "LookupType",
+                  "x-ms-csdl-type": "mscrm.fmi_SubmitDealApprovalResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

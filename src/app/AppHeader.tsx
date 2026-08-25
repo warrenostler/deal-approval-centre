@@ -1,18 +1,32 @@
-import { HelpCircleIcon, ShieldCheckIcon, ChevronDownIcon } from '../components/icons'
+import { useEffect, useState } from 'react'
+import { NavLink } from 'react-router-dom'
+import { getPendingApprovals } from '../services/approvalData'
 
 export function AppHeader() {
+  const [pendingCount, setPendingCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    let active = true
+    getPendingApprovals().then((approvals) => {
+      if (active) setPendingCount(approvals.length)
+    }).catch(() => {
+      if (active) setPendingCount(null)
+    })
+    return () => { active = false }
+  }, [])
+
   return (
-    <header className="app-header">
-      <div className="app-header-brand">
-        <span className="app-header-mark"><ShieldCheckIcon width={18} height={18} /></span>
-        <span className="app-header-title">Deal Approval Centre</span>
+    <header className="approval-centre-header">
+      <div className="approval-centre-heading">
+        <h1>Deal Approval Centre</h1>
+        <div className="approval-centre-tabs" role="tablist" aria-label="Approval views">
+          <NavLink to="/" end className={({ isActive }) => `approval-centre-tab${isActive ? ' is-active' : ''}`} role="tab">Pending approvals</NavLink>
+          <NavLink to="/opportunity-history" className={({ isActive }) => `approval-centre-tab${isActive ? ' is-active' : ''}`} role="tab">Approval history</NavLink>
+        </div>
       </div>
-      <div className="app-header-actions">
-        <button type="button" className="app-header-icon-button" aria-label="Help">
-          <HelpCircleIcon width={19} height={19} />
-        </button>
-        <span className="app-header-avatar" aria-hidden="true">WO</span>
-        <ChevronDownIcon width={16} height={16} className="app-header-chevron" />
+      <div className="pending-count" aria-label={`${pendingCount ?? 0} pending approvals`}>
+        <strong>{pendingCount ?? '-'}</strong>
+        <span>Pending</span>
       </div>
     </header>
   )

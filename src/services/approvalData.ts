@@ -7,10 +7,13 @@ import { SystemusersService } from '../generated/services/SystemusersService'
 import { Fmi_contentsService } from '../generated/services/Fmi_contentsService'
 import { Fmi_targetterritoriesService } from '../generated/services/Fmi_targetterritoriesService'
 import { Fmi_businesswrittenyearsService } from '../generated/services/Fmi_businesswrittenyearsService'
+import { Fmi_businesswrittengroupsService } from '../generated/services/Fmi_businesswrittengroupsService'
 import { Fmi_ProcessDealApprovalDecisionService } from '../generated/services/Fmi_ProcessDealApprovalDecisionService'
 import { Fmi_opportunityitemsService } from '../generated/services/Fmi_opportunityitemsService'
+import { GoalsService } from '../generated/services/GoalsService'
 import type { Fmi_dealapprovalitems } from '../generated/models/Fmi_dealapprovalitemsModel'
 import type { Fmi_dealapprovals } from '../generated/models/Fmi_dealapprovalsModel'
+import type { Opportunities } from '../generated/models/OpportunitiesModel'
 
 export interface ApprovalSummary {
   dealApprovalId: string
@@ -35,7 +38,16 @@ export interface ApprovalDetail extends Fmi_dealapprovals {
   salesExecutiveName: string
 }
 
-export type DealContentItem = Fmi_dealapprovalitems & { fmi_licensestartdate?: string; fmi_licenseenddate?: string }
+export interface BudgetHistoryEntry {
+  businessWrittenYearId: string
+  businessWrittenYearName: string
+  currentYearBudget: number | null
+  fc1: number | null
+  fc2: number | null
+  fc3: number | null
+}
+
+export type DealContentItem = Fmi_dealapprovalitems & { fmi_licensestartdate?: string; fmi_licenseenddate?: string; fmi_includeinvariances?: boolean; fmi_nobudgetrecordfound?: boolean; fmi_varianceexcluded?: boolean; budgetHistory?: BudgetHistoryEntry[] }
 
 export type ApprovalDecision = 'approve' | 'reject'
 
@@ -44,8 +56,15 @@ export interface DecisionResult {
   status: number | null
 }
 
+export interface OpportunityApprovalHistory {
+  opportunity: Opportunities
+  approvals: Fmi_dealapprovals[]
+}
+
 const approvalSelect = ['fmi_dealapprovalid', '_fmi_opportunity_value', '_fmi_submittedcompany_value', '_fmi_approver_value', '_fmi_requestedby_value', 'createdon', 'fmi_submitteddealvalue', 'fmi_approvalstatus', 'fmi_requestorcomment']
-const itemSelect = ['fmi_dealapprovalitemid', '_fmi_dealapproval_value', '_fmi_content_value', '_fmi_targetterritory_value', '_fmi_businesswrittenyear_value', '_fmi_opportunityitem_value', 'fmi_submittedsalevalue', 'fmi_submittedbudgetvalue', 'fmi_submittedlatestforecast', 'fmi_latestforecasttype', 'fmi_variancetoforecast', 'fmi_variancetobudget', 'fmi_belowforecast']
+const itemSelect = ['fmi_dealapprovalitemid', '_fmi_dealapproval_value', '_fmi_content_value', '_fmi_targetterritory_value', '_fmi_businesswrittenyear_value', '_fmi_businesswrittengroup_value', '_fmi_opportunityitem_value', 'fmi_submittedsalevalue', 'fmi_submittedbudgetvalue', 'fmi_submittedlatestforecast', 'fmi_latestforecasttype', 'fmi_variancetoforecast', 'fmi_variancetobudget', 'fmi_belowforecast']
+const opportunityHistorySelect = ['opportunityid', 'name', 'fmi_dpssalescontractid', 'fmi_currentapprovalstatus']
+const historySelect = ['fmi_dealapprovalid', 'fmi_name', '_fmi_opportunity_value', 'fmi_approvalstatus', 'fmi_approvaltype', 'fmi_approvalversion', 'fmi_approvalsenton', 'fmi_decisionon', 'fmi_decisioncomments', 'fmi_requestorcomment', 'fmi_iscurrentapproval', 'fmi_reapprovalrequired', 'fmi_cancelledon', 'fmi_cancellationreason', 'createdon', '_fmi_approver_value', '_fmi_requestedby_value', '_fmi_decisionby_value', 'fmi_submitteddealvalue']
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' ? value as Record<string, unknown> : null
@@ -77,6 +96,7 @@ function mapItemLabels(record: Fmi_dealapprovalitems): Fmi_dealapprovalitems {
   const raw = record as unknown as Record<string, unknown>
   return {
     ...record,
+    fmi_businesswrittengroupname: formattedValue(raw, '_fmi_businesswrittengroup_value') ?? record.fmi_businesswrittengroupname,
     fmi_contentname: formattedValue(raw, '_fmi_content_value') ?? record.fmi_contentname,
     fmi_targetterritoryname: formattedValue(raw, '_fmi_targetterritory_value') ?? record.fmi_targetterritoryname,
     fmi_businesswrittenyearname: formattedValue(raw, '_fmi_businesswrittenyear_value') ?? record.fmi_businesswrittenyearname,
@@ -87,6 +107,98 @@ function mapItemLabels(record: Fmi_dealapprovalitems): Fmi_dealapprovalitems {
 
 type LookupRow = Record<string, unknown>
 type LookupService = (options: { select: string[]; filter: string }) => Promise<{ success: boolean; data: LookupRow[] }>
+
+function yearNumber(value: string | undefined): number | null {
+  const match = value?.match(/(?:FY)?(\d{4})/i)
+  if (!match) return null
+  const parsed = Number(match[1])
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function hasMeaningfulBudgetValue(entry: BudgetHistoryEntry): boolean {
+  return [entry.currentYearBudget, entry.fc1, entry.fc2, entry.fc3].some((value) => value !== null && value !== 0)
+}
+
+function formattedAlias(record: Record<string, unknown>, field: string): string {
+  return asString(record[`${field}@OData.Community.Display.V1.FormattedValue`])
+}
+
+async function getBusinessWrittenTerritories(ids: string[]): Promise<Map<string, string>> {
+  const uniqueIds = [...new Set(ids.map(normalizeGuid).filter(Boolean))]
+  if (uniqueIds.length === 0) return new Map()
+  const filter = uniqueIds.map((id) => `fmi_targetterritoryid eq ${id}`).join(' or ')
+  const result = await Fmi_targetterritoriesService.getAll({ select: ['fmi_targetterritoryid', '_fmi_businesswrittenterritory_value'], filter })
+  if (!result.success) throw new Error('Business Written Territory mappings could not be loaded.')
+  return new Map((result.data ?? []).map((row) => [normalizeGuid(row.fmi_targetterritoryid), normalizeGuid(row._fmi_businesswrittenterritory_value)]))
+}
+
+async function getBudgetHistory(items: Fmi_dealapprovalitems[]): Promise<Map<string, BudgetHistoryEntry[]>> {
+  const itemRows = items.map((item) => {
+    const raw = item as unknown as Record<string, unknown>
+    return {
+      itemId: item.fmi_dealapprovalitemid,
+      businessWrittenGroupId: normalizeGuid(raw._fmi_businesswrittengroup_value),
+      targetTerritoryId: normalizeGuid(raw._fmi_targetterritory_value),
+      businessWrittenYearId: normalizeGuid(raw._fmi_businesswrittenyear_value),
+      businessWrittenYearName: item.fmi_businesswrittenyearname ?? formattedValue(raw, '_fmi_businesswrittenyear_value'),
+    }
+  })
+  const businessWrittenTerritories = await getBusinessWrittenTerritories(itemRows.map((item) => item.targetTerritoryId))
+  const combinations = new Map<string, { businessWrittenGroupId: string; businessWrittenTerritoryId: string }>()
+
+  for (const item of itemRows) {
+    const businessWrittenTerritoryId = businessWrittenTerritories.get(item.targetTerritoryId)
+    if (!item.businessWrittenGroupId || !businessWrittenTerritoryId) continue
+    combinations.set(`${item.businessWrittenGroupId}|${businessWrittenTerritoryId}`, { businessWrittenGroupId: item.businessWrittenGroupId, businessWrittenTerritoryId })
+  }
+
+  const combinationRows = [...combinations.values()]
+  if (combinationRows.length === 0) return new Map()
+
+  const groupFilter = [...new Set(combinationRows.map((row) => row.businessWrittenGroupId))].map((id) => `_fmi_businesswrittengroup_value eq ${id}`).join(' or ')
+  const territoryFilter = [...new Set(combinationRows.map((row) => row.businessWrittenTerritoryId))].map((id) => `_fmi_bwterritory_value eq ${id}`).join(' or ')
+  const result = await GoalsService.getAll({
+    select: ['goalid', '_fmi_businesswrittengroup_value', '_fmi_bwterritory_value', '_fmi_businesswrittenyear_value', 'fmi_currentyearbudget', 'fmi_fc1', 'fmi_fc2', 'fmi_fc3'],
+    filter: `(${groupFilter}) and (${territoryFilter})`,
+  })
+  if (!result.success) throw new Error('Historic budget data could not be loaded.')
+  const goalsByCombination = new Map<string, BudgetHistoryEntry[]>()
+
+  for (const goal of result.data ?? []) {
+    const key = `${normalizeGuid(goal._fmi_businesswrittengroup_value)}|${normalizeGuid(goal._fmi_bwterritory_value)}`
+    const entry: BudgetHistoryEntry = {
+      businessWrittenYearId: normalizeGuid(goal._fmi_businesswrittenyear_value),
+      businessWrittenYearName: formattedAlias(goal as unknown as Record<string, unknown>, '_fmi_businesswrittenyear_value'),
+      currentYearBudget: asNullableNumber(goal.fmi_currentyearbudget),
+      fc1: asNullableNumber(goal.fmi_fc1),
+      fc2: asNullableNumber(goal.fmi_fc2),
+      fc3: asNullableNumber(goal.fmi_fc3),
+    }
+    if (!hasMeaningfulBudgetValue(entry)) continue
+    const existing = goalsByCombination.get(key) ?? []
+    existing.push(entry)
+    goalsByCombination.set(key, existing)
+  }
+
+  const historyByItemId = new Map<string, BudgetHistoryEntry[]>()
+  for (const item of itemRows) {
+    const businessWrittenTerritoryId = businessWrittenTerritories.get(item.targetTerritoryId)
+    if (!businessWrittenTerritoryId) continue
+    const currentYear = yearNumber(item.businessWrittenYearName)
+    const history = (goalsByCombination.get(`${item.businessWrittenGroupId}|${businessWrittenTerritoryId}`) ?? [])
+      .filter((entry) => entry.businessWrittenYearId !== item.businessWrittenYearId)
+      .filter((entry) => {
+        const entryYear = yearNumber(entry.businessWrittenYearName)
+        return currentYear === null || entryYear === null ? true : entryYear < currentYear
+      })
+      .sort((left, right) => (yearNumber(right.businessWrittenYearName) ?? 0) - (yearNumber(left.businessWrittenYearName) ?? 0))
+    if (history.length > 0) historyByItemId.set(item.itemId, history)
+  }
+
+  console.info('[DealApprovalCentre] Budget history loaded', { itemCount: historyByItemId.size })
+
+  return historyByItemId
+}
 
 async function getLookupNames(service: LookupService, idField: string, nameField: string, ids: string[]): Promise<Map<string, string>> {
   const uniqueIds = [...new Set(ids.map(normalizeGuid).filter(Boolean))]
@@ -115,6 +227,15 @@ async function getLicenceDates(ids: string[]): Promise<Map<string, { start?: str
   return new Map(result.data.map((row) => [normalizeGuid(row.fmi_opportunityitemid), { start: asString(row.fmi_licensestartdate) || undefined, end: asString(row.fmi_licenseenddate) || undefined }]))
 }
 
+async function getVarianceFlags(ids: string[]): Promise<Map<string, boolean>> {
+  const uniqueIds = [...new Set(ids.map(normalizeGuid).filter(Boolean))]
+  if (uniqueIds.length === 0) return new Map()
+  const filter = uniqueIds.map((id) => `fmi_businesswrittengroupid eq ${id}`).join(' or ')
+  const result = await Fmi_businesswrittengroupsService.getAll({ select: ['fmi_businesswrittengroupid', 'fmi_includeinvariances'], filter })
+  if (!result.success) throw new Error('Business Written Group variance settings could not be loaded.')
+  return new Map((result.data ?? []).map((row) => [normalizeGuid(row.fmi_businesswrittengroupid), row.fmi_includeinvariances !== false]))
+}
+
 async function resolveQueueSalesExecutives(approvals: ApprovalSummary[]): Promise<ApprovalSummary[]> {
   const opportunities = await getOpportunityRows(approvals.map((approval) => approval.opportunityId))
   const salesExecutiveIds = [...new Set([...opportunities.values()].map((row) => row.salesExecutiveId).filter(Boolean))]
@@ -126,6 +247,7 @@ async function resolveDetailLookups(approval: Fmi_dealapprovals, items: Fmi_deal
   const approvalRaw = approval as unknown as Record<string, unknown>
   const itemRaw = items.map((item) => item as unknown as Record<string, unknown>)
   const licenceDates = await getLicenceDates(itemRaw.map((item) => asString(item._fmi_opportunityitem_value)))
+  const varianceFlags = await getVarianceFlags(itemRaw.map((item) => asString(item._fmi_businesswrittengroup_value)))
   const userIds = [approvalRaw._fmi_approver_value, approvalRaw._fmi_requestedby_value].map(asString)
   const [companies, opportunityRows, users, content, territories, years] = await Promise.all([
     getLookupNames(AccountsService.getAll as unknown as LookupService, 'accountid', 'name', [asString(approvalRaw._fmi_submittedcompany_value)]),
@@ -141,12 +263,22 @@ async function resolveDetailLookups(approval: Fmi_dealapprovals, items: Fmi_deal
   const requestedById = normalizeGuid(approvalRaw._fmi_requestedby_value)
   const opportunityRow = opportunityRows.get(opportunityId)
   const salesExecutiveNames = await getLookupNames(SystemusersService.getAll as unknown as LookupService, 'systemuserid', 'fullname', opportunityRow?.salesExecutiveId ? [opportunityRow.salesExecutiveId] : [])
+  const labelledItems = items.map((item) => {
+    const raw = item as unknown as Record<string, unknown>
+    return { ...item, fmi_contentname: content.get(normalizeGuid(raw._fmi_content_value)) ?? item.fmi_contentname, fmi_targetterritoryname: territories.get(normalizeGuid(raw._fmi_targetterritory_value)) ?? item.fmi_targetterritoryname, fmi_businesswrittenyearname: years.get(normalizeGuid(raw._fmi_businesswrittenyear_value)) ?? item.fmi_businesswrittenyearname }
+  })
+  const budgetHistory = await getBudgetHistory(labelledItems).catch((error: unknown) => {
+    console.warn('[DealApprovalCentre] Budget history could not be loaded', error)
+    return new Map<string, BudgetHistoryEntry[]>()
+  })
   return {
     approval: { ...approval, fmi_submittedcompanyname: companies.get(companyId) ?? approval.fmi_submittedcompanyname, fmi_opportunityname: opportunityRow?.name ?? approval.fmi_opportunityname, fmi_approvername: users.get(approverId) ?? approval.fmi_approvername, fmi_requestedbyname: users.get(requestedById) ?? approval.fmi_requestedbyname, salesExecutiveName: salesExecutiveNames.get(opportunityRow?.salesExecutiveId ?? '') ?? 'Unassigned' },
-    items: items.map((item) => {
+    items: labelledItems.map((item) => {
       const raw = item as unknown as Record<string, unknown>
       const dates = licenceDates.get(normalizeGuid(raw._fmi_opportunityitem_value))
-      return { ...item, fmi_licensestartdate: dates?.start, fmi_licenseenddate: dates?.end, fmi_contentname: content.get(normalizeGuid(raw._fmi_content_value)) ?? item.fmi_contentname, fmi_targetterritoryname: territories.get(normalizeGuid(raw._fmi_targetterritory_value)) ?? item.fmi_targetterritoryname, fmi_businesswrittenyearname: years.get(normalizeGuid(raw._fmi_businesswrittenyear_value)) ?? item.fmi_businesswrittenyearname }
+      const includeInVariances = varianceFlags.get(normalizeGuid(raw._fmi_businesswrittengroup_value))
+      const noBudgetRecordFound = item.fmi_submittedbudgetvalue === null || item.fmi_submittedbudgetvalue === undefined
+      return { ...item, fmi_licensestartdate: dates?.start, fmi_licenseenddate: dates?.end, fmi_includeinvariances: includeInVariances, fmi_nobudgetrecordfound: noBudgetRecordFound, fmi_varianceexcluded: includeInVariances === false, budgetHistory: budgetHistory.get(item.fmi_dealapprovalitemid) ?? [] }
     }),
   }
 }
@@ -189,6 +321,37 @@ export async function getApprovalDetail(id: string): Promise<ApprovalDetail> {
   const mappedItems = (itemResult.data ?? []).map(mapItemLabels)
   const resolved = await resolveDetailLookups(mappedApproval, mappedItems)
   return { ...resolved.approval, items: resolved.items }
+}
+
+export async function getOpportunityApprovalHistory(contractId: string): Promise<OpportunityApprovalHistory> {
+  const normalizedContractId = contractId.trim()
+  if (!normalizedContractId) throw new Error('Enter a DPS sale contract ID.')
+  const escapedValue = normalizedContractId.replace(/'/g, "''")
+  const result = await OpportunitiesService.getAll({
+    select: opportunityHistorySelect,
+    filter: `fmi_dpssalescontractid eq '${escapedValue}'`,
+  })
+  if (!result.success) throw new Error('The opportunity could not be searched.')
+  let opportunity = result.data?.[0]
+  if (!opportunity) {
+    const nameResult = await OpportunitiesService.getAll({
+      select: opportunityHistorySelect,
+      filter: `contains(name, '${escapedValue}') or contains(fmi_dpssalescontractid, '${escapedValue}')`,
+    })
+    if (!nameResult.success) throw new Error('The opportunity could not be searched.')
+    opportunity = nameResult.data?.[0]
+  }
+  if (!opportunity) throw new Error(`No opportunity was found for contract ID ${normalizedContractId}.`)
+
+  const opportunityId = normalizeGuid(opportunity.opportunityid)
+  const historyResult = await Fmi_dealapprovalsService.getAll({
+    select: historySelect,
+    filter: `_fmi_opportunity_value eq ${opportunityId}`,
+    orderBy: ['createdon desc'],
+  })
+  if (!historyResult.success) throw new Error('The approval history could not be loaded.')
+  const approvals = historyResult.data ?? []
+  return { opportunity, approvals }
 }
 
 function normalizeDecisionError(error: unknown): Error {

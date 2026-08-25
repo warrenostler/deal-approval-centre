@@ -5,9 +5,25 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Deal Approval Centre</title>
+    <style>
+      body { margin: 0; background: #f7f8fa; color: #172b4d; font-family: "Segoe UI", sans-serif; }
+      .boot-loading { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+      .boot-loading-panel { display: grid; justify-items: center; gap: 10px; color: #667085; text-align: center; }
+      .boot-spinner { width: 22px; height: 22px; border: 3px solid #dfe3ea; border-top-color: #2f6fb3; border-radius: 50%; animation: boot-spin .8s linear infinite; }
+      .boot-loading-panel strong { color: #172b4d; }
+      @keyframes boot-spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot-loading" role="status" aria-live="polite">
+        <div class="boot-loading-panel">
+          <span class="boot-spinner"></span>
+          <strong>Loading Deal Approval Centre...</strong>
+          <span>Preparing approval context.</span>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

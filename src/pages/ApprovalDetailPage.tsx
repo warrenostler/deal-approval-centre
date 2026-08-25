@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { getApprovalDetail, submitApprovalDecision, type ApprovalDecision, type ApprovalDetail } from '../services/approvalData'
 import { formatDateOnly, formatDateTime, formatUsd } from '../utils/formatters'
 import { ArrowLeftIcon, CalendarIcon, CheckIcon, ChevronDownIcon, CommentIcon, DocumentIcon, DollarIcon, GavelIcon, LayersIcon, UserIcon, XIcon } from '../components/icons'
 
 export function ApprovalDetailPage() {
   const { approvalId } = useParams()
+  const location = useLocation()
   const navigate = useNavigate()
   const [approval, setApproval] = useState<ApprovalDetail | null>(null)
   const [comment, setComment] = useState('')
@@ -17,6 +18,7 @@ export function ApprovalDetailPage() {
   const [itemsExpanded, setItemsExpanded] = useState(false)
   const [commentSectionOpen, setCommentSectionOpen] = useState(false)
   const [itemsSectionOpen, setItemsSectionOpen] = useState(false)
+  const [historyItemId, setHistoryItemId] = useState<string | null>(null)
   const commentRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -82,10 +84,12 @@ export function ApprovalDetailPage() {
   const commentPreview = commentText ? 'Comment provided' : 'No coordinator comment provided.'
   const itemCount = approval.items.length
   const visibleItems = approval.items.slice(0, itemsExpanded ? itemCount : 5)
+  const historyItem = approval.items.find((item) => item.fmi_dealapprovalitemid === historyItemId)
+  const returnPath = typeof location.state === 'object' && location.state !== null && 'from' in location.state && typeof location.state.from === 'string' ? location.state.from : '/'
 
   return (
     <main className="approval-app detail-page">
-      <div className="detail-back-row"><Link to="/" className="back-link"><ArrowLeftIcon width={16} height={16} /><span>Back to main menu</span></Link></div>
+      <div className="detail-back-row"><Link to={returnPath} className="back-link"><ArrowLeftIcon width={16} height={16} /><span>{returnPath.startsWith('/opportunity-history') ? 'Back to deal history' : 'Back to main menu'}</span></Link></div>
 
       <div className="deal-heading-row">
         <span className="deal-heading-icon"><DocumentIcon width={20} height={20} /></span>
@@ -161,25 +165,65 @@ export function ApprovalDetailPage() {
                 <article className={item.fmi_belowforecast ? 'item-card below-forecast' : 'item-card'} key={item.fmi_dealapprovalitemid}>
                   <div className="item-card-heading">
                     <div>
-                      <strong>{item.fmi_contentname || 'Content unavailable'}</strong>
+                      <div className="item-card-title"><strong>{item.fmi_contentname || 'Content unavailable'}</strong><span className="item-bwg">BWG {item.fmi_businesswrittengroupname || '-'}</span></div>
                       <p>{item.fmi_targetterritoryname || '-'} · BWY {item.fmi_businesswrittenyearname || '-'} · Licence {formatDateOnly(item.fmi_licensestartdate)} – {formatDateOnly(item.fmi_licenseenddate)}</p>
                     </div>
-                    <span>{item.fmi_belowforecast ? 'Below forecast' : 'On track'}</span>
+                    <div className="item-card-actions">
+                      <span>{item.fmi_belowforecast ? 'Below forecast' : 'On track'}</span>
+                      {(item.budgetHistory?.length ?? 0) > 0 && (
+                        <button type="button" className="budget-history-toggle" onClick={() => setHistoryItemId(item.fmi_dealapprovalitemid)}>
+                          View historic budgets
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="item-card-grid">
                     <div><dt>Sale Value</dt><dd>{formatUsd(item.fmi_submittedsalevalue)}</dd></div>
-                    <div><dt>Submitted budget</dt><dd>{formatUsd(item.fmi_submittedbudgetvalue)}</dd></div>
-                    <div><dt>Latest forecast</dt><dd>{formatUsd(item.fmi_submittedlatestforecast)}</dd></div>
-                    <div><dt>Forecast type</dt><dd>{item.fmi_latestforecasttypename || '-'}</dd></div>
-                    <div><dt>Variance to forecast</dt><dd>{formatUsd(item.fmi_variancetoforecast)}</dd></div>
-                    <div><dt>Variance to budget</dt><dd>{formatUsd(item.fmi_variancetobudget)}</dd></div>
+                    <div><dt>Submitted budget</dt><dd>{item.fmi_nobudgetrecordfound ? 'N/A' : formatUsd(item.fmi_submittedbudgetvalue)}</dd></div>
+                    <div><dt>Latest forecast</dt><dd>{item.fmi_nobudgetrecordfound ? 'N/A' : formatUsd(item.fmi_submittedlatestforecast)}</dd></div>
+                    <div><dt>Forecast type</dt><dd>{item.fmi_nobudgetrecordfound ? 'N/A' : item.fmi_latestforecasttypename || '-'}</dd></div>
+                    <div><dt>Variance to forecast</dt><dd>{item.fmi_nobudgetrecordfound || item.fmi_varianceexcluded ? 'N/A' : formatUsd(item.fmi_variancetoforecast)}</dd></div>
+                    <div><dt>Variance to budget</dt><dd>{item.fmi_nobudgetrecordfound || item.fmi_varianceexcluded ? 'N/A' : formatUsd(item.fmi_variancetobudget)}</dd></div>
                   </div>
+                  {(item.fmi_nobudgetrecordfound || item.fmi_varianceexcluded) && (
+                    <p className="item-financial-note">
+                      {item.fmi_nobudgetrecordfound ? 'No budget record found for this BWG, territory and BWY combination.' : 'Variance excluded for this Business Written Group.'}
+                    </p>
+                  )}
                 </article>
               ))}
             </div>
           </div>
         )}
       </section>
+
+      {historyItem && (historyItem.budgetHistory?.length ?? 0) > 0 && (
+        <div className="budget-history-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setHistoryItemId(null) }}>
+          <section className="budget-history-modal" role="dialog" aria-modal="true" aria-labelledby="budget-history-title">
+            <div className="budget-history-modal-heading">
+              <div>
+                <p className="eyebrow">Historic budgets</p>
+                <h2 id="budget-history-title">{historyItem.fmi_contentname || 'Content unavailable'}</h2>
+                <span>{historyItem.fmi_businesswrittengroupname || '-'} · {historyItem.fmi_targetterritoryname || '-'}</span>
+              </div>
+              <button type="button" className="budget-history-close" aria-label="Close historic budgets" onClick={() => setHistoryItemId(null)}><XIcon width={18} height={18} /></button>
+            </div>
+            <p className="budget-history-modal-note">Previous Business Written Years with at least one budget or forecast value.</p>
+            <div className="budget-history-table">
+              <div className="budget-history-row budget-history-header"><span>BWY</span><span>Budget</span><span>FC1</span><span>FC2</span><span>FC3</span></div>
+              {historyItem.budgetHistory?.map((entry) => (
+                <div className="budget-history-row" key={`${historyItem.fmi_dealapprovalitemid}-${entry.businessWrittenYearId}`}>
+                  <span>{entry.businessWrittenYearName || '-'}</span>
+                  <span>{formatUsd(entry.currentYearBudget)}</span>
+                  <span>{formatUsd(entry.fc1)}</span>
+                  <span>{formatUsd(entry.fc2)}</span>
+                  <span>{formatUsd(entry.fc3)}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
 
       <section className={`decision-card ${itemsSectionOpen || commentSectionOpen ? '' : 'sticky-decision-panel'}`} aria-labelledby="decision-heading">
         <span className="decision-card-icon"><GavelIcon width={18} height={18} /></span>
