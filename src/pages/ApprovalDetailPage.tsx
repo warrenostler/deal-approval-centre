@@ -89,7 +89,7 @@ export function ApprovalDetailPage() {
 
   return (
     <main className="approval-app detail-page">
-      <div className="detail-back-row"><Link to={returnPath} className="back-link"><ArrowLeftIcon width={16} height={16} /><span>Back to deal audit history</span></Link></div>
+      <div className="detail-back-row"><Link to={returnPath} className="back-link"><ArrowLeftIcon width={16} height={16} /><span>{returnPath.startsWith('/opportunity-history') ? 'Back to deal history' : 'Back to main menu'}</span></Link></div>
 
       <div className="deal-heading-row">
         <span className="deal-heading-icon"><DocumentIcon width={20} height={20} /></span>
