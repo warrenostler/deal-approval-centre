@@ -144,6 +144,14 @@ h2 { margin-bottom: 4px; color: var(--dac-text); font-size: 1.3rem; font-weight:
 .budget-history-table { display: grid; gap: 0; overflow-x: auto; }
 .budget-history-row { display: grid; grid-template-columns: minmax(78px, 1fr) repeat(4, minmax(90px, 1fr)); gap: 10px; min-width: 470px; padding: 8px 0; border-top: 1px solid #e2ebe8; color: var(--dac-text); font-size: .78rem; font-weight: 700; }
 .budget-history-header { border-top: 0; color: var(--dac-muted); font-size: .64rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.budget-history-modal-backdrop { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px; background: rgba(11, 31, 58, .42); }
+.budget-history-modal { width: min(760px, 100%); max-height: min(640px, calc(100vh - 48px)); overflow: auto; padding: 22px 24px 24px; border: 1px solid var(--dac-border); border-radius: var(--dac-radius); background: var(--dac-surface); box-shadow: var(--dac-shadow-lg); }
+.budget-history-modal-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--dac-border); }
+.budget-history-modal-heading h2 { margin: 0 0 4px; font-size: 1.25rem; }
+.budget-history-modal-heading span { color: var(--dac-muted); font-size: .82rem; }
+.budget-history-close { display: grid; place-items: center; flex: 0 0 34px; width: 34px; height: 34px; border: 1px solid var(--dac-border); border-radius: 50%; color: var(--dac-muted); background: #fff; cursor: pointer; }
+.budget-history-close:hover, .budget-history-close:focus-visible { border-color: var(--dac-teal-700); color: var(--dac-teal-900); outline: none; }
+.budget-history-modal-note { margin: 14px 0 4px; color: var(--dac-muted); font-size: .8rem; }
 
 /* Request Deal Approval page */
 .request-deal-page { display: grid; gap: 20px; padding-top: 14px; }

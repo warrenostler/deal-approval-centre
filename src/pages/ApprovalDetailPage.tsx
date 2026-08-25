@@ -17,7 +17,7 @@ export function ApprovalDetailPage() {
   const [itemsExpanded, setItemsExpanded] = useState(false)
   const [commentSectionOpen, setCommentSectionOpen] = useState(false)
   const [itemsSectionOpen, setItemsSectionOpen] = useState(false)
-  const [expandedHistory, setExpandedHistory] = useState<Record<string, boolean>>({})
+  const [historyItemId, setHistoryItemId] = useState<string | null>(null)
   const commentRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -83,6 +83,7 @@ export function ApprovalDetailPage() {
   const commentPreview = commentText ? 'Comment provided' : 'No coordinator comment provided.'
   const itemCount = approval.items.length
   const visibleItems = approval.items.slice(0, itemsExpanded ? itemCount : 5)
+  const historyItem = approval.items.find((item) => item.fmi_dealapprovalitemid === historyItemId)
 
   return (
     <main className="approval-app detail-page">
@@ -168,8 +169,8 @@ export function ApprovalDetailPage() {
                     <div className="item-card-actions">
                       <span>{item.fmi_belowforecast ? 'Below forecast' : 'On track'}</span>
                       {(item.budgetHistory?.length ?? 0) > 0 && (
-                        <button type="button" className="budget-history-toggle" onClick={() => setExpandedHistory((current) => ({ ...current, [item.fmi_dealapprovalitemid]: !current[item.fmi_dealapprovalitemid] }))}>
-                          {expandedHistory[item.fmi_dealapprovalitemid] ? 'Hide history' : 'History'}
+                        <button type="button" className="budget-history-toggle" onClick={() => setHistoryItemId(item.fmi_dealapprovalitemid)}>
+                          View historic budgets
                         </button>
                       )}
                     </div>
@@ -187,32 +188,40 @@ export function ApprovalDetailPage() {
                       {item.fmi_nobudgetrecordfound ? 'No budget record found for this BWG, territory and BWY combination.' : 'Variance excluded for this Business Written Group.'}
                     </p>
                   )}
-                  {expandedHistory[item.fmi_dealapprovalitemid] && (item.budgetHistory?.length ?? 0) > 0 && (
-                    <div className="budget-history-panel">
-                      <div className="budget-history-heading">
-                        <strong>Budget history</strong>
-                        <span>Same BWG and territory in previous years</span>
-                      </div>
-                      <div className="budget-history-table">
-                        <div className="budget-history-row budget-history-header"><span>BWY</span><span>Budget</span><span>FC1</span><span>FC2</span><span>FC3</span></div>
-                        {item.budgetHistory?.map((entry) => (
-                          <div className="budget-history-row" key={`${item.fmi_dealapprovalitemid}-${entry.businessWrittenYearId}`}>
-                            <span>{entry.businessWrittenYearName || '-'}</span>
-                            <span>{formatUsd(entry.currentYearBudget)}</span>
-                            <span>{formatUsd(entry.fc1)}</span>
-                            <span>{formatUsd(entry.fc2)}</span>
-                            <span>{formatUsd(entry.fc3)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </article>
               ))}
             </div>
           </div>
         )}
       </section>
+
+      {historyItem && (historyItem.budgetHistory?.length ?? 0) > 0 && (
+        <div className="budget-history-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setHistoryItemId(null) }}>
+          <section className="budget-history-modal" role="dialog" aria-modal="true" aria-labelledby="budget-history-title">
+            <div className="budget-history-modal-heading">
+              <div>
+                <p className="eyebrow">Historic budgets</p>
+                <h2 id="budget-history-title">{historyItem.fmi_contentname || 'Content unavailable'}</h2>
+                <span>{historyItem.fmi_businesswrittengroupname || '-'} · {historyItem.fmi_targetterritoryname || '-'}</span>
+              </div>
+              <button type="button" className="budget-history-close" aria-label="Close historic budgets" onClick={() => setHistoryItemId(null)}><XIcon width={18} height={18} /></button>
+            </div>
+            <p className="budget-history-modal-note">Previous Business Written Years with at least one budget or forecast value.</p>
+            <div className="budget-history-table">
+              <div className="budget-history-row budget-history-header"><span>BWY</span><span>Budget</span><span>FC1</span><span>FC2</span><span>FC3</span></div>
+              {historyItem.budgetHistory?.map((entry) => (
+                <div className="budget-history-row" key={`${historyItem.fmi_dealapprovalitemid}-${entry.businessWrittenYearId}`}>
+                  <span>{entry.businessWrittenYearName || '-'}</span>
+                  <span>{formatUsd(entry.currentYearBudget)}</span>
+                  <span>{formatUsd(entry.fc1)}</span>
+                  <span>{formatUsd(entry.fc2)}</span>
+                  <span>{formatUsd(entry.fc3)}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
 
       <section className={`decision-card ${itemsSectionOpen || commentSectionOpen ? '' : 'sticky-decision-panel'}`} aria-labelledby="decision-heading">
         <span className="decision-card-icon"><GavelIcon width={18} height={18} /></span>
