@@ -119,6 +119,19 @@ opportunityIdPromise.then((opportunityId) => {
 })
 
 async function start() {
+  const opportunityId = await opportunityIdPromise
+  ;(window as RuntimeWindow).__dacContext = { opportunityId }
+  if (opportunityId) {
+    const query = new URLSearchParams(window.location.search)
+    if (!query.get('opportunityId')) {
+      query.set('opportunityId', opportunityId)
+      window.history.replaceState(null, '', `${window.location.pathname}?${query.toString()}${window.location.hash}`)
+    }
+    const currentRoute = window.location.hash.replace(/^#/, '')
+    if (currentRoute === '' || currentRoute === '/') {
+      window.location.hash = '/request-deal-approval'
+    }
+  }
   const { default: App } = await import('./App.tsx')
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
@@ -126,18 +139,5 @@ async function start() {
     </StrictMode>,
   )
 }
-
-opportunityIdPromise.then((opportunityId) => {
-  if (!opportunityId) return
-  if (!new URLSearchParams(window.location.search).get('opportunityId')) {
-    const query = new URLSearchParams(window.location.search)
-    query.set('opportunityId', opportunityId)
-    window.history.replaceState(null, '', `${window.location.pathname}?${query.toString()}${window.location.hash}`)
-  }
-  const currentRoute = window.location.hash.replace(/^#/, '')
-  if (currentRoute === '' || currentRoute === '/') {
-    window.location.hash = '/request-deal-approval'
-  }
-})
 
 void start()
