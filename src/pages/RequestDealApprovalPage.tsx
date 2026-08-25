@@ -137,11 +137,21 @@ export function RequestDealApprovalPage() {
 
     try {
       await submitDealApproval(opportunityId, comment)
-      if (window.history.length > 1) {
-        navigate(-1)
-      } else {
-        navigate('/')
-      }
+      window.setTimeout(() => {
+        const targets: Window[] = []
+        let ancestor: Window = window
+        while (ancestor !== ancestor.parent && targets.length < 10) {
+          ancestor = ancestor.parent
+          targets.push(ancestor)
+        }
+        for (const target of targets) {
+          try {
+            target.postMessage({ type: 'DAC_CLOSE_REQUEST' }, '*')
+          } catch {
+            // Ignore inaccessible frame targets.
+          }
+        }
+      }, 500)
     } catch (reason: unknown) {
       setSubmitError(reason instanceof Error ? reason.message : 'The deal approval could not be submitted.')
       setSubmitting(false)

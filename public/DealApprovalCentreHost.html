@@ -117,6 +117,20 @@
 
       window.addEventListener("message", function (event) {
         if (
+          event.data &&
+          event.data.type === "DAC_CLOSE_REQUEST" &&
+          (event.source === appWindow || event.source === frame.contentWindow)
+        ) {
+          var parentXrm = window.parent && window.parent.Xrm;
+          if (parentXrm && parentXrm.Navigation && parentXrm.Navigation.close) {
+            parentXrm.Navigation.close();
+          } else if (window.close) {
+            window.close();
+          }
+          return;
+        }
+
+        if (
           event.origin === APP_ORIGIN &&
           event.data &&
           event.data.type === "DAC_ACK"
