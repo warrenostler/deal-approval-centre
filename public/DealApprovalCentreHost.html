@@ -122,8 +122,25 @@
           (event.source === appWindow || event.source === frame.contentWindow)
         ) {
           var parentXrm = window.parent && window.parent.Xrm;
-          if (parentXrm && parentXrm.Navigation && parentXrm.Navigation.close) {
-            parentXrm.Navigation.close();
+          if (
+            parentXrm &&
+            parentXrm.Navigation &&
+            typeof parentXrm.Navigation.openForm === "function" &&
+            opportunityId
+          ) {
+            parentXrm.Navigation.openForm({
+              entityName: "opportunity",
+              entityId: opportunityId
+            }).then(function () {
+              if (
+                parentXrm.Navigation &&
+                typeof parentXrm.Navigation.close === "function"
+              ) {
+                parentXrm.Navigation.close();
+              }
+            }).catch(function (error) {
+              console.error("Could not open the originating Opportunity.", error);
+            });
           } else if (window.close) {
             window.close();
           }
