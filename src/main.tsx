@@ -104,10 +104,15 @@ async function start() {
 }
 
 opportunityIdPromise.then((opportunityId) => {
-  if (opportunityId && !new URLSearchParams(window.location.search).get('opportunityId')) {
+  if (!opportunityId) return
+  if (!new URLSearchParams(window.location.search).get('opportunityId')) {
     const query = new URLSearchParams(window.location.search)
     query.set('opportunityId', opportunityId)
     window.history.replaceState(null, '', `${window.location.pathname}?${query.toString()}${window.location.hash}`)
+  }
+  const currentRoute = window.location.hash.replace(/^#/, '')
+  if (currentRoute === '' || currentRoute === '/') {
+    window.location.hash = '/request-deal-approval'
   }
 })
 
