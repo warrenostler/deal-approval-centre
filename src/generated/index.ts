@@ -17,6 +17,7 @@ export * as Fmi_dealapprovalitemsModel from './models/Fmi_dealapprovalitemsModel
 export * as Fmi_dealapprovalsModel from './models/Fmi_dealapprovalsModel';
 export * as Fmi_opportunityitemsModel from './models/Fmi_opportunityitemsModel';
 export * as Fmi_targetterritoriesModel from './models/Fmi_targetterritoriesModel';
+export * as GoalsModel from './models/GoalsModel';
 export * as OpportunitiesModel from './models/OpportunitiesModel';
 export * as SystemusersModel from './models/SystemusersModel';
 
@@ -33,5 +34,6 @@ export * from './services/Fmi_dealapprovalitemsService';
 export * from './services/Fmi_dealapprovalsService';
 export * from './services/Fmi_opportunityitemsService';
 export * from './services/Fmi_targetterritoriesService';
+export * from './services/GoalsService';
 export * from './services/OpportunitiesService';
 export * from './services/SystemusersService';

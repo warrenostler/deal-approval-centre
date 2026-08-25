@@ -5,17 +5,17 @@
  */
 
 export const dataSourcesInfo = {
-  "fmi_businesswrittengroups": {
-    "tableId": "",
-    "version": "",
-    "primaryKey": "fmi_businesswrittengroupid",
-    "dataSourceType": "Dataverse",
-    "apis": {}
-  },
   "goals": {
     "tableId": "",
     "version": "",
     "primaryKey": "goalid",
+    "dataSourceType": "Dataverse",
+    "apis": {}
+  },
+  "fmi_businesswrittengroups": {
+    "tableId": "",
+    "version": "",
+    "primaryKey": "fmi_businesswrittengroupid",
     "dataSourceType": "Dataverse",
     "apis": {}
   },

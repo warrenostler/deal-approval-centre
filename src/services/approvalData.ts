@@ -168,7 +168,7 @@ async function getBudgetHistory(items: Fmi_dealapprovalitems[]): Promise<Map<str
     const key = `${normalizeGuid(goal._fmi_businesswrittengroup_value)}|${normalizeGuid(goal._fmi_bwterritory_value)}`
     const entry: BudgetHistoryEntry = {
       businessWrittenYearId: normalizeGuid(goal._fmi_businesswrittenyear_value),
-      businessWrittenYearName: formattedAlias(goal, '_fmi_businesswrittenyear_value'),
+      businessWrittenYearName: formattedAlias(goal as unknown as Record<string, unknown>, '_fmi_businesswrittenyear_value'),
       currentYearBudget: asNullableNumber(goal.fmi_currentyearbudget),
       fc1: asNullableNumber(goal.fmi_fc1),
       fc2: asNullableNumber(goal.fmi_fc2),

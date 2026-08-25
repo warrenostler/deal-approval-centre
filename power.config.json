@@ -68,6 +68,11 @@
           "entitySetName": "fmi_businesswrittengroups",
           "logicalName": "fmi_businesswrittengroup",
           "isHidden": false
+        },
+        "budgets": {
+          "entitySetName": "goals",
+          "logicalName": "goal",
+          "isHidden": false
         }
       },
       "environmentVariableName": ""
