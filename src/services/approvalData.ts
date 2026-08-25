@@ -344,13 +344,20 @@ export async function getOpportunityApprovalHistory(contractId: string): Promise
   if (!opportunity) throw new Error(`No opportunity was found for contract ID ${normalizedContractId}.`)
 
   const opportunityId = normalizeGuid(opportunity.opportunityid)
-  const historyResult = await Fmi_dealapprovalsService.getAll({
-    select: historySelect,
-    filter: `_fmi_opportunity_value eq ${opportunityId}`,
-    orderBy: ['createdon desc'],
-  })
-  if (!historyResult.success) throw new Error('The approval history could not be loaded.')
-  const approvals = historyResult.data ?? []
+  const approvals: Fmi_dealapprovals[] = []
+  let skipToken: string | undefined
+  do {
+    const historyResult = await Fmi_dealapprovalsService.getAll({
+      select: historySelect,
+      filter: `_fmi_opportunity_value eq ${opportunityId}`,
+      orderBy: ['createdon desc'],
+      maxPageSize: 5000,
+      skipToken,
+    })
+    if (!historyResult.success) throw new Error('The approval history could not be loaded.')
+    approvals.push(...(historyResult.data ?? []))
+    skipToken = historyResult.skipToken
+  } while (skipToken)
   return { opportunity, approvals }
 }
 

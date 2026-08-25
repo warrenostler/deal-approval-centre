@@ -11,6 +11,14 @@ function optionLabel(options: Record<number, string>, value: number | undefined,
   return value === undefined ? fallback : options[value] ?? fallback
 }
 
+function statusClass(value: number | undefined): string {
+  if (value === 2) return 'history-status-pending'
+  if (value === 3) return 'history-status-approved'
+  if (value === 4) return 'history-status-rejected'
+  if (value === 5) return 'history-status-reapproval'
+  return 'history-status-neutral'
+}
+
 export function OpportunityApprovalHistoryPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const initialContractId = searchParams.get('contractId')?.trim() ?? ''
@@ -84,7 +92,7 @@ export function OpportunityApprovalHistoryPage() {
         <>
           <section className="history-opportunity summary-card" aria-labelledby="opportunity-heading">
             <div className="history-opportunity-title"><span className="summary-icon"><DocumentIcon width={16} height={16} /></span><div><small>Opportunity</small><h2 id="opportunity-heading">{result.opportunity.name || 'Unnamed opportunity'}</h2><span>{result.opportunity.fmi_dpssalescontractid || contractId.trim()}</span></div></div>
-            <div className="summary-item"><span className="summary-icon"><CheckIcon width={16} height={16} /></span><div><small>Current approval status</small><strong>{optionLabel(Opportunitiesfmi_currentapprovalstatus, result.opportunity.fmi_currentapprovalstatus, 'Not available')}</strong></div></div>
+            <div className={`history-current-status ${statusClass(result.opportunity.fmi_currentapprovalstatus)}`}><span className="history-current-status-icon"><CheckIcon width={18} height={18} /></span><div><small>Current approval status</small><strong>{optionLabel(Opportunitiesfmi_currentapprovalstatus, result.opportunity.fmi_currentapprovalstatus, 'Not available')}</strong><span>Current status on the Opportunity</span></div></div>
             <div className="summary-item"><span className="summary-icon"><GavelIcon width={16} height={16} /></span><div><small>Approval records</small><strong>{result.approvals.length}</strong></div></div>
           </section>
 

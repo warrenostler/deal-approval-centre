@@ -297,6 +297,20 @@ h2 { margin-bottom: 4px; color: var(--dac-text); font-size: 1.3rem; font-weight:
 .history-opportunity-title div { min-width: 0; }
 .history-opportunity-title h2 { margin: 3px 0 2px; font-size: 1.05rem; overflow-wrap: anywhere; }
 .history-opportunity-title span { color: var(--dac-muted); font-size: .8rem; }
+.history-current-status { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 10px 18px; border-right: 1px solid var(--dac-border); border-left: 1px solid var(--dac-border); }
+.history-current-status-icon { display: grid; place-items: center; flex: 0 0 38px; width: 38px; height: 38px; border-radius: 50%; color: #fff; background: var(--dac-teal-800); }
+.history-current-status small, .history-current-status strong, .history-current-status > div > span { display: block; }
+.history-current-status small { color: var(--dac-muted); font-size: .66rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.history-current-status strong { margin-top: 3px; color: var(--dac-text); font-size: 1.15rem; }
+.history-current-status > div > span { margin-top: 3px; color: var(--dac-muted); font-size: .72rem; }
+.history-status-pending { background: #fff8e7; border-color: #efc75e; }
+.history-status-pending .history-current-status-icon { background: #b7791f; }
+.history-status-approved { background: #edf8f4; border-color: #8fc2b6; }
+.history-status-approved .history-current-status-icon { background: #23734f; }
+.history-status-rejected { background: #fdf0ee; border-color: #c07168; }
+.history-status-rejected .history-current-status-icon { background: var(--dac-danger); }
+.history-status-reapproval { background: #eef4fb; border-color: #9fc9e5; }
+.history-status-reapproval .history-current-status-icon { background: var(--dac-teal-700); }
 .history-panel { padding: 22px 24px; border: 1px solid var(--dac-border); border-radius: var(--dac-radius); background: var(--dac-surface); box-shadow: var(--dac-shadow); }
 .history-panel-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--dac-border); }
 .history-panel-heading h2 { margin: 0; }
