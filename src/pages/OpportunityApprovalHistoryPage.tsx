@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { getOpportunityApprovalHistory, type OpportunityApprovalHistory } from '../services/approvalData'
 import { Fmi_dealapprovalsfmi_approvalstatus, Fmi_dealapprovalsfmi_approvaltype } from '../generated/models/Fmi_dealapprovalsModel'
 import { Opportunitiesfmi_currentapprovalstatus } from '../generated/models/OpportunitiesModel'
@@ -12,23 +12,49 @@ function optionLabel(options: Record<number, string>, value: number | undefined,
 }
 
 export function OpportunityApprovalHistoryPage() {
-  const [contractId, setContractId] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialContractId = searchParams.get('contractId')?.trim() ?? ''
+  const [contractId, setContractId] = useState(initialContractId)
   const [result, setResult] = useState<OpportunityApprovalHistory | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  async function searchContract(value: string) {
+    const normalizedContractId = value.trim()
+    setContractId(normalizedContractId)
+    setSearchParams(normalizedContractId ? { contractId: normalizedContractId } : {}, { replace: true })
     setLoading(true)
     setError(null)
     try {
-      setResult(await getOpportunityApprovalHistory(contractId))
+      setResult(await getOpportunityApprovalHistory(normalizedContractId))
     } catch (reason: unknown) {
       setResult(null)
       setError(reason instanceof Error ? reason.message : 'The opportunity could not be searched.')
     } finally {
       setLoading(false)
     }
+  }
+
+  useEffect(() => {
+    if (!initialContractId) return
+    let active = true
+    setLoading(true)
+    getOpportunityApprovalHistory(initialContractId).then((history) => {
+      if (active) setResult(history)
+    }).catch((reason: unknown) => {
+      if (active) {
+        setResult(null)
+        setError(reason instanceof Error ? reason.message : 'The opportunity could not be searched.')
+      }
+    }).finally(() => {
+      if (active) setLoading(false)
+    })
+    return () => { active = false }
+  }, [initialContractId])
+
+  async function handleSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    await searchContract(contractId)
   }
 
   return (
@@ -71,7 +97,7 @@ export function OpportunityApprovalHistoryPage() {
               return <article className="history-entry" key={approval.fmi_dealapprovalid}>
                 <div className="history-entry-marker"><ClockIcon width={17} height={17} /></div>
                 <div className="history-entry-body">
-                  <div className="history-entry-heading"><div><strong>{status}</strong><span>{optionLabel(Fmi_dealapprovalsfmi_approvaltype, approval.fmi_approvaltype, 'Approval')} {approval.fmi_approvalversion ? `· Version ${approval.fmi_approvalversion}` : ''}</span></div>{isPending ? <Link className="history-detail-link" to={`/approvals/${approval.fmi_dealapprovalid}`} state={{ from: '/opportunity-history' }}>Open approval</Link> : <span className="history-complete">Recorded</span>}</div>
+                  <div className="history-entry-heading"><div><strong>{status}</strong><span>{optionLabel(Fmi_dealapprovalsfmi_approvaltype, approval.fmi_approvaltype, 'Approval')} {approval.fmi_approvalversion ? `· Version ${approval.fmi_approvalversion}` : ''}</span></div>{isPending ? <Link className="history-detail-link" to={`/approvals/${approval.fmi_dealapprovalid}`} state={{ from: `/opportunity-history?contractId=${encodeURIComponent(contractId.trim())}` }}>Open approval</Link> : <span className="history-complete">Recorded</span>}</div>
                   <div className="history-entry-meta"><span><CalendarIcon width={15} height={15} />{formatDateTime(approval.fmi_decisionon || approval.fmi_approvalsenton || approval.createdon)}</span><span>Value {formatUsd(approval.fmi_submitteddealvalue)}</span></div>
                   {(approval.fmi_decisioncomments || approval.fmi_requestorcomment) && <p className="history-comment">{approval.fmi_decisioncomments || approval.fmi_requestorcomment}</p>}
                 </div>
