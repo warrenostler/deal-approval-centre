@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { getDealApprovalPreview, isGuid, submitDealApproval, type DealPreviewItem } from '../services/requestDealApprovalData'
 
 type SortColumn = 'title' | 'territory' | 'businessWrittenYear' | 'sale' | 'budget' | 'latestForecast' | 'varianceToForecast' | null
@@ -48,8 +48,23 @@ function getDisplayValue(item: DealPreviewItem, field: 'budget' | 'latestForecas
   }
 }
 
+function closeRequestHost() {
+  const targets: Window[] = []
+  let ancestor: Window = window
+  while (ancestor !== ancestor.parent && targets.length < 10) {
+    ancestor = ancestor.parent
+    targets.push(ancestor)
+  }
+  for (const target of targets) {
+    try {
+      target.postMessage({ type: 'DAC_CLOSE_REQUEST' }, '*')
+    } catch {
+      // Ignore inaccessible frame targets.
+    }
+  }
+}
+
 export function RequestDealApprovalPage() {
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [items, setItems] = useState<DealPreviewItem[]>([])
   const [opportunityId, setOpportunityId] = useState<string>('')
@@ -61,6 +76,19 @@ export function RequestDealApprovalPage() {
   const [submitting, setSubmitting] = useState(false)
   const [sortColumn, setSortColumn] = useState<SortColumn>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+
+  useEffect(() => {
+    const handleBrowserNavigation = () => {
+      const route = window.location.hash.replace(/^#/, '')
+      if (route === '' || route === '/') closeRequestHost()
+    }
+    window.addEventListener('popstate', handleBrowserNavigation)
+    window.addEventListener('hashchange', handleBrowserNavigation)
+    return () => {
+      window.removeEventListener('popstate', handleBrowserNavigation)
+      window.removeEventListener('hashchange', handleBrowserNavigation)
+    }
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -137,21 +165,7 @@ export function RequestDealApprovalPage() {
 
     try {
       await submitDealApproval(opportunityId, comment)
-      window.setTimeout(() => {
-        const targets: Window[] = []
-        let ancestor: Window = window
-        while (ancestor !== ancestor.parent && targets.length < 10) {
-          ancestor = ancestor.parent
-          targets.push(ancestor)
-        }
-        for (const target of targets) {
-          try {
-            target.postMessage({ type: 'DAC_CLOSE_REQUEST' }, '*')
-          } catch {
-            // Ignore inaccessible frame targets.
-          }
-        }
-      }, 500)
+      window.setTimeout(closeRequestHost, 500)
     } catch (reason: unknown) {
       setSubmitError(reason instanceof Error ? reason.message : 'The deal approval could not be submitted.')
       setSubmitting(false)
@@ -268,7 +282,7 @@ export function RequestDealApprovalPage() {
       </section>
 
       <div className="request-actions">
-        <button type="button" className="secondary-button" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}>
+        <button type="button" className="secondary-button" onClick={closeRequestHost}>
           Cancel
         </button>
         <button type="button" className="primary-button" onClick={() => void handleSubmit()} disabled={submitting}>
