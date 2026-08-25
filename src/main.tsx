@@ -78,6 +78,30 @@ export const opportunityIdPromise = new Promise<string | null>((resolve) => {
 
 ;(window as RuntimeWindow).__dacOpportunityIdPromise = opportunityIdPromise
 
+function closeRequestHostOnBack() {
+  const runtimeWindow = window as RuntimeWindow
+  if (!runtimeWindow.__dacContext?.opportunityId) return
+  const route = window.location.hash.replace(/^#/, '')
+  if (route !== '' && route !== '/') return
+
+  let ancestor: Window = window
+  const targets: Window[] = []
+  while (ancestor !== ancestor.parent && targets.length < 10) {
+    ancestor = ancestor.parent
+    targets.push(ancestor)
+  }
+  for (const target of targets) {
+    try {
+      target.postMessage({ type: 'DAC_CLOSE_REQUEST' }, '*')
+    } catch {
+      // Ignore inaccessible frame targets.
+    }
+  }
+}
+
+window.addEventListener('hashchange', closeRequestHostOnBack)
+window.addEventListener('popstate', closeRequestHostOnBack)
+
 opportunityIdPromise.then((opportunityId) => {
   ;(window as RuntimeWindow).__dacContext = { opportunityId }
   const boot = {
