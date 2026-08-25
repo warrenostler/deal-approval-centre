@@ -10,6 +10,7 @@ import { Fmi_businesswrittenyearsService } from '../generated/services/Fmi_busin
 import { Fmi_businesswrittengroupsService } from '../generated/services/Fmi_businesswrittengroupsService'
 import { Fmi_ProcessDealApprovalDecisionService } from '../generated/services/Fmi_ProcessDealApprovalDecisionService'
 import { Fmi_opportunityitemsService } from '../generated/services/Fmi_opportunityitemsService'
+import { GoalsService } from '../generated/services/GoalsService'
 import type { Fmi_dealapprovalitems } from '../generated/models/Fmi_dealapprovalitemsModel'
 import type { Fmi_dealapprovals } from '../generated/models/Fmi_dealapprovalsModel'
 import type { Opportunities } from '../generated/models/OpportunitiesModel'
@@ -106,18 +107,6 @@ function mapItemLabels(record: Fmi_dealapprovalitems): Fmi_dealapprovalitems {
 
 type LookupRow = Record<string, unknown>
 type LookupService = (options: { select: string[]; filter: string }) => Promise<{ success: boolean; data: LookupRow[] }>
-type XrmWebApi = { retrieveMultipleRecords: (entityLogicalName: string, options?: string, maxPageSize?: number) => Promise<{ entities: Record<string, unknown>[] }> }
-
-function getXrmWebApi(): XrmWebApi | null {
-  const current = window as Window & { Xrm?: { WebApi?: XrmWebApi } }
-  if (current.Xrm?.WebApi) return current.Xrm.WebApi
-  try {
-    const parentWindow = window.parent as Window & { Xrm?: { WebApi?: XrmWebApi } }
-    return parentWindow.Xrm?.WebApi ?? null
-  } catch {
-    return null
-  }
-}
 
 function yearNumber(value: string | undefined): number | null {
   const match = value?.match(/(?:FY)?(\d{4})/i)
@@ -144,12 +133,6 @@ async function getBusinessWrittenTerritories(ids: string[]): Promise<Map<string,
 }
 
 async function getBudgetHistory(items: Fmi_dealapprovalitems[]): Promise<Map<string, BudgetHistoryEntry[]>> {
-  const webApi = getXrmWebApi()
-  if (!webApi) {
-    console.info('[DealApprovalCentre] Budget history skipped because Xrm.WebApi is unavailable')
-    return new Map()
-  }
-
   const itemRows = items.map((item) => {
     const raw = item as unknown as Record<string, unknown>
     return {
@@ -172,29 +155,16 @@ async function getBudgetHistory(items: Fmi_dealapprovalitems[]): Promise<Map<str
   const combinationRows = [...combinations.values()]
   if (combinationRows.length === 0) return new Map()
 
-  const groupValues = [...new Set(combinationRows.map((row) => row.businessWrittenGroupId))].map((id) => `<value>${id}</value>`).join('')
-  const territoryValues = [...new Set(combinationRows.map((row) => row.businessWrittenTerritoryId))].map((id) => `<value>${id}</value>`).join('')
-  const fetchXml = `
-    <fetch>
-      <entity name='goal'>
-        <attribute name='goalid' />
-        <attribute name='fmi_businesswrittengroup' />
-        <attribute name='fmi_bwterritory' />
-        <attribute name='fmi_businesswrittenyear' />
-        <attribute name='fmi_currentyearbudget' />
-        <attribute name='fmi_fc1' />
-        <attribute name='fmi_fc2' />
-        <attribute name='fmi_fc3' />
-        <filter type='and'>
-          <condition attribute='fmi_businesswrittengroup' operator='in'>${groupValues}</condition>
-          <condition attribute='fmi_bwterritory' operator='in'>${territoryValues}</condition>
-        </filter>
-      </entity>
-    </fetch>`
-  const result = await webApi.retrieveMultipleRecords('goal', `?fetchXml=${encodeURIComponent(fetchXml)}`)
+  const groupFilter = [...new Set(combinationRows.map((row) => row.businessWrittenGroupId))].map((id) => `_fmi_businesswrittengroup_value eq ${id}`).join(' or ')
+  const territoryFilter = [...new Set(combinationRows.map((row) => row.businessWrittenTerritoryId))].map((id) => `_fmi_bwterritory_value eq ${id}`).join(' or ')
+  const result = await GoalsService.getAll({
+    select: ['goalid', '_fmi_businesswrittengroup_value', '_fmi_bwterritory_value', '_fmi_businesswrittenyear_value', 'fmi_currentyearbudget', 'fmi_fc1', 'fmi_fc2', 'fmi_fc3'],
+    filter: `(${groupFilter}) and (${territoryFilter})`,
+  })
+  if (!result.success) throw new Error('Historic budget data could not be loaded.')
   const goalsByCombination = new Map<string, BudgetHistoryEntry[]>()
 
-  for (const goal of result.entities ?? []) {
+  for (const goal of result.data ?? []) {
     const key = `${normalizeGuid(goal._fmi_businesswrittengroup_value)}|${normalizeGuid(goal._fmi_bwterritory_value)}`
     const entry: BudgetHistoryEntry = {
       businessWrittenYearId: normalizeGuid(goal._fmi_businesswrittenyear_value),

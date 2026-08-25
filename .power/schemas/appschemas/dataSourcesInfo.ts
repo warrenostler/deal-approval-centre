@@ -12,6 +12,13 @@ export const dataSourcesInfo = {
     "dataSourceType": "Dataverse",
     "apis": {}
   },
+  "goals": {
+    "tableId": "",
+    "version": "",
+    "primaryKey": "goalid",
+    "dataSourceType": "Dataverse",
+    "apis": {}
+  },
   "fmi_businesswrittenyears": {
     "tableId": "",
     "version": "",
