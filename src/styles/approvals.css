@@ -136,6 +136,7 @@ h2 { margin-bottom: 4px; color: var(--dac-text); font-size: 1.3rem; font-weight:
 .item-card-grid div { display: grid; gap: 4px; min-width: 0; padding-top: 9px; border-top: 1px solid #e2ebe8; }
 .item-card-grid dt { color: var(--dac-muted); font-size: .65rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
 .item-card-grid dd { margin: 0; color: var(--dac-text); font-size: .82rem; font-weight: 750; }
+.item-financial-note { margin: 12px 0 0; padding: 8px 10px; border-left: 3px solid var(--dac-amber-border); border-radius: 6px; color: var(--dac-amber-text); background: var(--dac-amber-bg); font-size: .76rem; font-weight: 700; }
 .budget-history-panel { margin-top: 14px; padding: 12px 13px; border: 1px solid #d7e8e3; border-radius: 9px; background: #f8fcfb; }
 .budget-history-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 9px; }
 .budget-history-heading strong { color: var(--dac-teal-900); font-size: .86rem; }

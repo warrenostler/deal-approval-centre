@@ -46,7 +46,7 @@ export interface BudgetHistoryEntry {
   fc3: number | null
 }
 
-export type DealContentItem = Fmi_dealapprovalitems & { fmi_licensestartdate?: string; fmi_licenseenddate?: string; fmi_includeinvariances?: boolean; budgetHistory?: BudgetHistoryEntry[] }
+export type DealContentItem = Fmi_dealapprovalitems & { fmi_licensestartdate?: string; fmi_licenseenddate?: string; fmi_includeinvariances?: boolean; fmi_nobudgetrecordfound?: boolean; fmi_varianceexcluded?: boolean; budgetHistory?: BudgetHistoryEntry[] }
 
 export type ApprovalDecision = 'approve' | 'reject'
 
@@ -307,7 +307,8 @@ async function resolveDetailLookups(approval: Fmi_dealapprovals, items: Fmi_deal
       const raw = item as unknown as Record<string, unknown>
       const dates = licenceDates.get(normalizeGuid(raw._fmi_opportunityitem_value))
       const includeInVariances = varianceFlags.get(normalizeGuid(raw._fmi_businesswrittengroup_value))
-      return { ...item, fmi_licensestartdate: dates?.start, fmi_licenseenddate: dates?.end, fmi_includeinvariances: includeInVariances, budgetHistory: budgetHistory.get(item.fmi_dealapprovalitemid) ?? [] }
+      const noBudgetRecordFound = item.fmi_submittedbudgetvalue === null || item.fmi_submittedbudgetvalue === undefined
+      return { ...item, fmi_licensestartdate: dates?.start, fmi_licenseenddate: dates?.end, fmi_includeinvariances: includeInVariances, fmi_nobudgetrecordfound: noBudgetRecordFound, fmi_varianceexcluded: includeInVariances === false, budgetHistory: budgetHistory.get(item.fmi_dealapprovalitemid) ?? [] }
     }),
   }
 }

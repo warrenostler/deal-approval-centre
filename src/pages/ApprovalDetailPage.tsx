@@ -176,12 +176,17 @@ export function ApprovalDetailPage() {
                   </div>
                   <div className="item-card-grid">
                     <div><dt>Sale Value</dt><dd>{formatUsd(item.fmi_submittedsalevalue)}</dd></div>
-                    <div><dt>Submitted budget</dt><dd>{formatUsd(item.fmi_submittedbudgetvalue)}</dd></div>
-                    <div><dt>Latest forecast</dt><dd>{formatUsd(item.fmi_submittedlatestforecast)}</dd></div>
-                    <div><dt>Forecast type</dt><dd>{item.fmi_latestforecasttypename || '-'}</dd></div>
-                    <div><dt>Variance to forecast</dt><dd>{item.fmi_includeinvariances === false ? 'N/A' : formatUsd(item.fmi_variancetoforecast)}</dd></div>
-                    <div><dt>Variance to budget</dt><dd>{item.fmi_includeinvariances === false ? 'N/A' : formatUsd(item.fmi_variancetobudget)}</dd></div>
+                    <div><dt>Submitted budget</dt><dd>{item.fmi_nobudgetrecordfound ? 'N/A' : formatUsd(item.fmi_submittedbudgetvalue)}</dd></div>
+                    <div><dt>Latest forecast</dt><dd>{item.fmi_nobudgetrecordfound ? 'N/A' : formatUsd(item.fmi_submittedlatestforecast)}</dd></div>
+                    <div><dt>Forecast type</dt><dd>{item.fmi_nobudgetrecordfound ? 'N/A' : item.fmi_latestforecasttypename || '-'}</dd></div>
+                    <div><dt>Variance to forecast</dt><dd>{item.fmi_nobudgetrecordfound || item.fmi_varianceexcluded ? 'N/A' : formatUsd(item.fmi_variancetoforecast)}</dd></div>
+                    <div><dt>Variance to budget</dt><dd>{item.fmi_nobudgetrecordfound || item.fmi_varianceexcluded ? 'N/A' : formatUsd(item.fmi_variancetobudget)}</dd></div>
                   </div>
+                  {(item.fmi_nobudgetrecordfound || item.fmi_varianceexcluded) && (
+                    <p className="item-financial-note">
+                      {item.fmi_nobudgetrecordfound ? 'No budget record found for this BWG, territory and BWY combination.' : 'Variance excluded for this Business Written Group.'}
+                    </p>
+                  )}
                   {expandedHistory[item.fmi_dealapprovalitemid] && (item.budgetHistory?.length ?? 0) > 0 && (
                     <div className="budget-history-panel">
                       <div className="budget-history-heading">
