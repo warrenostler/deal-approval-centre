@@ -165,6 +165,80 @@ var approverAId = Guid.NewGuid();
 var approverBId = Guid.NewGuid();
 var superApproverUserId = Guid.NewGuid();
 
+Check("Read-only team membership grants all-queue visibility without SuperApprover rights", () =>
+{
+    var readerId = Guid.NewGuid();
+    var service = new FakeQueueOrganizationService(approvalOneId, approvalTwoId, approverAId, approverBId, superApproverUserId) { ReadOnlyUserId = readerId };
+    var provider = new FakeServiceProvider(new FakePluginExecutionContext { InitiatingUserId = readerId, UserId = superApproverUserId }, service);
+    new GetPendingDealApprovals(null!, null!).Execute(provider);
+    var parsed = (Dictionary<string, object>)new JavaScriptSerializer().DeserializeObject((string)provider.Context.OutputParameters["fmi_ApprovalsJson"]);
+    AssertEqual(2, (int)parsed["count"], "all pending records visible");
+    AssertEqual(readerId.ToString("D"), (string)parsed["callerId"], "identity is initiating human, not execution user");
+    AssertEqual(true, (bool)parsed["isReadOnlyTeamMember"], "read-only membership");
+    AssertEqual(false, (bool)parsed["isSuperApprover"], "no approval rights granted");
+});
+
+Check("Configured read-only team does not broaden a nonmember's queue", () =>
+{
+    var service = new FakeQueueOrganizationService(approvalOneId, approvalTwoId, approverAId, approverBId, superApproverUserId) { ReadOnlyUserId = Guid.NewGuid() };
+    var provider = new FakeServiceProvider(new FakePluginExecutionContext { InitiatingUserId = approverAId, UserId = approverAId }, service);
+    new GetPendingDealApprovals(null!, null!).Execute(provider);
+    var parsed = (Dictionary<string, object>)new JavaScriptSerializer().DeserializeObject((string)provider.Context.OutputParameters["fmi_ApprovalsJson"]);
+    AssertEqual(1, (int)parsed["count"], "only assigned approval visible");
+    AssertEqual(false, (bool)parsed["isReadOnlyTeamMember"], "not a member");
+});
+Check("Read-only users cannot submit or cancel through the Custom APIs", () =>
+{
+    var readerId = Guid.NewGuid();
+    var service = new FakeQueueOrganizationService(approvalOneId, approvalTwoId, approverAId, approverBId, superApproverUserId) { ReadOnlyUserId = readerId };
+    foreach (IPlugin plugin in new IPlugin[] { new SubmitDealApproval(null!, null!), new CancelDealApprovalRequest(null!, null!) })
+    {
+        var provider = new FakeServiceProvider(new FakePluginExecutionContext { InitiatingUserId = readerId, UserId = superApproverUserId }, service);
+        provider.Context.InputParameters["OpportunityId"] = Guid.NewGuid();
+        try { plugin.Execute(provider); throw new Exception("Expected read-only denial"); }
+        catch (InvalidPluginExecutionException ex) when (ex.Message.Contains("read-only")) { }
+    }
+});
+
+Check("Ordinary approver membership wins over read-only membership without granting SuperApprover access", () =>
+{
+    var service = new FakeQueueOrganizationService(approvalOneId, approvalTwoId, approverAId, approverBId, superApproverUserId) { ReadOnlyUserId = approverAId, OrdinaryApproverUserId = approverAId };
+    AssertEqual(true, new ReadOnlyTeamResolver(service).CanSubmit(approverAId), "higher mode retains submission rights");
+    var provider = new FakeServiceProvider(new FakePluginExecutionContext { InitiatingUserId = approverAId, UserId = approverAId }, service);
+    new GetPendingDealApprovals(null!, null!).Execute(provider);
+    var parsed = (Dictionary<string, object>)new JavaScriptSerializer().DeserializeObject((string)provider.Context.OutputParameters["fmi_ApprovalsJson"]);
+    AssertEqual(true, (bool)parsed["isApproverTeamMember"], "ordinary approver membership");
+    AssertEqual(true, (bool)parsed["isReadOnlyTeamMember"], "read-only membership retained");
+    AssertEqual(false, (bool)parsed["isSuperApprover"], "not elevated to SuperApprover");
+    AssertEqual(true, (bool)parsed["canSubmit"], "can submit");
+    AssertEqual(2, (int)parsed["count"], "read-only membership still grants broader viewing");
+});
+
+Check("SuperApprover membership wins over read-only membership", () =>
+{
+    var service = new FakeQueueOrganizationService(approvalOneId, approvalTwoId, approverAId, approverBId, superApproverUserId) { ReadOnlyUserId = superApproverUserId };
+    AssertEqual(true, new ReadOnlyTeamResolver(service).CanSubmit(superApproverUserId), "SuperApprover retains write mode");
+});
+
+Check("Ordinary approver team alone does not broaden the assigned queue", () =>
+{
+    var service = new FakeQueueOrganizationService(approvalOneId, approvalTwoId, approverAId, approverBId, superApproverUserId) { OrdinaryApproverUserId = approverAId };
+    var provider = new FakeServiceProvider(new FakePluginExecutionContext { InitiatingUserId = approverAId, UserId = approverAId }, service);
+    new GetPendingDealApprovals(null!, null!).Execute(provider);
+    var parsed = (Dictionary<string, object>)new JavaScriptSerializer().DeserializeObject((string)provider.Context.OutputParameters["fmi_ApprovalsJson"]);
+    AssertEqual(1, (int)parsed["count"], "ordinary approver sees assigned only");
+});
+
+Check("A viewer cannot decide another user's approval", () =>
+{
+    var readerId = Guid.NewGuid();
+    var (service, provider) = BuildHarness(readerId);
+    provider.Context.InputParameters["fmi_DealApprovalId"] = approvalId;
+    provider.Context.InputParameters["fmi_Decision"] = 1;
+    try { new ProcessDealApprovalDecision(null!, null!).Execute(provider); throw new Exception("Expected authorization denial"); }
+    catch (InvalidPluginExecutionException ex) when (ex.Message.Contains("not authorised")) { }
+    AssertEqual(0, service.Updates.Count, "no writes");
+});
 Check("GetPendingDealApprovals: a normal approver sees only their own assigned Pending approval", () =>
 {
     var service = new FakeQueueOrganizationService(approvalOneId, approvalTwoId, approverAId, approverBId, superApproverUserId);
@@ -549,6 +623,10 @@ sealed class FakeQueueOrganizationService : IOrganizationService
     }
 
     public string? LastTeamFetchXml { get; private set; }
+    public Guid? ReadOnlyUserId { get; set; }
+    public Guid? OrdinaryApproverUserId { get; set; }
+    private readonly Guid _approverTeamId = Guid.NewGuid();
+    private readonly Guid _readOnlyTeamId = Guid.NewGuid();
 
     public EntityCollection RetrieveMultiple(QueryBase query)
     {
@@ -562,6 +640,24 @@ sealed class FakeQueueOrganizationService : IOrganizationService
         }
 
         var qe = (QueryExpression)query;
+        if (qe.EntityName == "environmentvariabledefinition")
+        {
+            var schema = (string)qe.Criteria.Conditions.Single(c => c.AttributeName == "schemaname").Values[0];
+            var isApproverConfig = schema == "fmi_DealApprovalApproverTeam";
+            if (isApproverConfig ? !OrdinaryApproverUserId.HasValue : !ReadOnlyUserId.HasValue) return new EntityCollection();
+            var definition = new Entity("environmentvariabledefinition", Guid.NewGuid());
+            definition["defaultvalue"] = (isApproverConfig ? _approverTeamId : _readOnlyTeamId).ToString("D");
+            return new EntityCollection(new List<Entity> { definition });
+        }
+        if (qe.EntityName == "environmentvariablevalue") return new EntityCollection();
+        if (qe.EntityName == "teammembership")
+        {
+            var team = (Guid)qe.Criteria.Conditions.Single(c => c.AttributeName == "teamid").Values[0];
+            var user = (Guid)qe.Criteria.Conditions.Single(c => c.AttributeName == "systemuserid").Values[0];
+            return (team == _readOnlyTeamId && user == ReadOnlyUserId) || (team == _approverTeamId && user == OrdinaryApproverUserId)
+                ? new EntityCollection(new List<Entity> { new Entity("teammembership") })
+                : new EntityCollection();
+        }
 
         if (qe.EntityName == "fmi_dealapproval")
         {

@@ -63,6 +63,19 @@ h2 { margin-bottom: 4px; color: var(--dac-text); font-size: 1.3rem; font-weight:
 .queue-panel { padding: 22px 24px; background: var(--dac-surface); border: 1px solid var(--dac-border); border-radius: var(--dac-radius); box-shadow: var(--dac-shadow); }
 .queue-toolbar { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--dac-border); }
 .toolbar-note { color: var(--dac-muted); font-size: .78rem; }
+.queue-toolbar { flex-wrap: wrap; }
+.queue-toolbar > div:first-child { margin-right: auto; }
+.deal-type-field { display: grid; gap: 6px; color: var(--dac-muted); font-size: .73rem; font-weight: 700; }
+.deal-type-field select { max-width: 100%; padding: 11px 13px; border: 1px solid var(--dac-border); border-radius: 8px; color: var(--dac-text); background: #fafcfb; font: inherit; }
+.deal-type-field select:focus-visible { outline: 2px solid var(--dac-teal-700); outline-offset: 2px; }
+.deal-type-badge { display: inline-block; margin-left: 10px; padding: 3px 8px; border-radius: 5px; background: var(--dac-teal-100); color: var(--dac-teal-800); font-size: .7rem; font-weight: 700; }
+.queue-scope-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+.queue-scope { display: inline-flex; border: 1px solid var(--dac-border); border-radius: 8px; overflow: hidden; }
+.queue-scope button { border: 0; padding: 10px 18px; color: var(--dac-text); background: var(--dac-surface); font-weight: 700; cursor: pointer; }
+.queue-scope button[aria-pressed="true"] { color: white; background: var(--dac-teal-800); }
+.queue-scope button:focus-visible { outline: 3px solid var(--dac-teal-700); outline-offset: -3px; }
+.approval-card .queue-assignee { margin-top: 8px; }
+.read-only-notice { margin-top: 18px; padding: 16px 20px; border: 1px solid var(--dac-border); border-radius: 8px; color: var(--dac-muted); background: var(--dac-surface); }
 .search-field { display: grid; gap: 6px; width: min(300px, 100%); color: var(--dac-muted); font-size: .73rem; font-weight: 700; }
 .search-field input { width: 100%; padding: 11px 13px; border: 1px solid var(--dac-border); border-radius: 8px; color: var(--dac-text); background: #fafcfb; outline: none; }
 .search-field input:focus { border-color: var(--dac-teal-700); box-shadow: 0 0 0 3px rgba(21, 116, 103, .16); }

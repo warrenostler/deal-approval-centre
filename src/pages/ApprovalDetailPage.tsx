@@ -36,7 +36,7 @@ export function ApprovalDetailPage() {
   }, [approvalId])
 
   async function handleDecision(decision: ApprovalDecision) {
-    if (!approvalId || submitting) return
+    if (!approvalId || submitting || !approval?.canDecide) return
     const trimmedComment = comment.trim()
     if (decision === 'reject' && !trimmedComment) {
       setDecisionError('A rejection comment is required.')
@@ -225,7 +225,7 @@ export function ApprovalDetailPage() {
         </div>
       )}
 
-      <section className={`decision-card ${itemsSectionOpen || commentSectionOpen ? '' : 'sticky-decision-panel'}`} aria-labelledby="decision-heading">
+      {approval.canDecide ? <section className={`decision-card ${itemsSectionOpen || commentSectionOpen ? '' : 'sticky-decision-panel'}`} aria-labelledby="decision-heading">
         <span className="decision-card-icon"><GavelIcon width={18} height={18} /></span>
         <div className="decision-card-body">
           <p className="eyebrow">Decision</p>
@@ -247,7 +247,7 @@ export function ApprovalDetailPage() {
             </button>
           </div>
         </div>
-      </section>
+      </section> : <section className="read-only-notice" role="status">View only. You can review this approval, but you cannot record a decision on it.</section>}
     </main>
   )
 }

@@ -44,7 +44,10 @@ namespace DealApprovalPreviewPlugin
         public string Build(Guid callerId)
         {
             var isSuperApprover = _superApproverResolver.IsSuperApprover(callerId);
-            var approvals = RetrievePendingApprovals(callerId, isSuperApprover);
+            var teamResolver = new ReadOnlyTeamResolver(_service);
+            var isApproverTeamMember = teamResolver.IsApproverTeamMember(callerId);
+            var isReadOnlyTeamMember = teamResolver.IsMember(callerId);
+            var approvals = RetrievePendingApprovals(callerId, isSuperApprover || isReadOnlyTeamMember);
 
             var items = approvals
                 .Select(BuildApprovalSummary)
@@ -53,7 +56,12 @@ namespace DealApprovalPreviewPlugin
             var response = new Dictionary<string, object>
             {
                 ["approvals"] = items,
-                ["count"] = items.Count
+                ["count"] = items.Count,
+                ["callerId"] = callerId.ToString("D"),
+                ["isSuperApprover"] = isSuperApprover,
+                ["isReadOnlyTeamMember"] = isReadOnlyTeamMember,
+                ["isApproverTeamMember"] = isApproverTeamMember,
+                ["canSubmit"] = isSuperApprover || isApproverTeamMember || !isReadOnlyTeamMember
             };
 
             var serializer = new JavaScriptSerializer { MaxJsonLength = int.MaxValue };

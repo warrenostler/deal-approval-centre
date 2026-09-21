@@ -42,6 +42,7 @@ namespace DealApprovalPreviewPlugin
             }
 
             var service = localPluginContext.OrgSvcFactory.CreateOrganizationService(null);
+            new ReadOnlyTeamResolver(service).EnsureCanSubmit(context.InitiatingUserId);
             var opportunity = RetrieveOpportunity(service, opportunityId);
             var stage = opportunity.GetAttributeValue<OptionSetValue>("fmi_stage")?.Value;
             var opportunityApprovalStatus = stage == OfferStage

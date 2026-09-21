@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { getApprovalAccess } from '../services/approvalData'
 import {
   getDealApprovalPreview,
   isGuid,
@@ -95,6 +96,7 @@ export function RequestDealApprovalPage() {
   const [comment, setComment] = useState('')
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [canSubmit, setCanSubmit] = useState(false)
   const [sortColumn, setSortColumn] = useState<SortColumn>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
@@ -126,9 +128,10 @@ export function RequestDealApprovalPage() {
       }
 
       setOpportunityId(suppliedId)
-      getDealApprovalPreview(suppliedId)
-      .then((preview) => {
+      Promise.all([getDealApprovalPreview(suppliedId), getApprovalAccess()])
+      .then(([preview, access]) => {
         if (!active) return
+        setCanSubmit(access.canSubmit)
         setOpportunityName(preview.opportunityName || 'Opportunity')
         setSalesType(preview.salesType ?? null)
         setItems(preview.items)
@@ -178,7 +181,7 @@ export function RequestDealApprovalPage() {
   }
 
   async function handleSubmit() {
-    if (!opportunityId) return
+    if (!opportunityId || !canSubmit || submitting) return
 
     if (hasBelowForecast && !comment.trim()) {
       setSubmitError('A comment is required when any item is below forecast.')
@@ -346,7 +349,7 @@ export function RequestDealApprovalPage() {
         </section>
       )}
 
-      <section className="request-comment-box">
+      {canSubmit ? <section className="request-comment-box">
         <label htmlFor="coordinator-comment">Coordinator comment</label>
         <textarea
           id="coordinator-comment"
@@ -357,15 +360,15 @@ export function RequestDealApprovalPage() {
         />
         {hasBelowForecast && <small>Comment required because one or more items are below forecast.</small>}
         {submitError && <p className="request-error" role="alert">{submitError}</p>}
-      </section>
+      </section> : <p className="read-only-notice">View only. You cannot submit approval requests.</p>}
 
       <div className="request-actions">
         <button type="button" className="secondary-button" onClick={closeRequestHost}>
           Cancel
         </button>
-        <button type="button" className="primary-button" onClick={() => void handleSubmit()} disabled={submitting}>
+        {canSubmit && <button type="button" className="primary-button" onClick={() => void handleSubmit()} disabled={submitting}>
           {submitting ? 'Submitting…' : 'Submit'}
-        </button>
+        </button>}
       </div>
     </main>
   )

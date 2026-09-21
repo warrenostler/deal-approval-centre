@@ -51,6 +51,7 @@ namespace DealApprovalPreviewPlugin
             // is the actual human who called this API, and is what SubmitBuilder writes into
             // fmi_requestedby - never SYSTEM, never the elevated service's own identity.
             var elevatedService = localPluginContext.OrgSvcFactory.CreateOrganizationService(null);
+            new ReadOnlyTeamResolver(elevatedService).EnsureCanSubmit(context.InitiatingUserId);
             var builder = new SubmitBuilder(elevatedService, context.InitiatingUserId);
             var result = builder.Submit(opportunityId, coordinatorComment);
 

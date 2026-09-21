@@ -31,11 +31,13 @@ export interface ApprovalSummary {
   belowForecastCount: number
   approvalStatus: number
   salesExecutiveName: string
+  salesType: number | null
 }
 
 export interface ApprovalDetail extends Fmi_dealapprovals {
   items: DealContentItem[]
   salesExecutiveName: string
+  canDecide: boolean
 }
 
 export interface BudgetHistoryEntry {
@@ -209,13 +211,13 @@ async function getLookupNames(service: LookupService, idField: string, nameField
   return new Map(result.data.map((row) => [normalizeGuid(row[idField]), asString(row[nameField])]))
 }
 
-async function getOpportunityRows(ids: string[]): Promise<Map<string, { name: string; salesExecutiveId: string }>> {
+async function getOpportunityRows(ids: string[]): Promise<Map<string, { name: string; salesExecutiveId: string; salesType: number | null }>> {
   const uniqueIds = [...new Set(ids.map(normalizeGuid).filter(Boolean))]
   if (uniqueIds.length === 0) return new Map()
   const filter = uniqueIds.map((id) => `opportunityid eq ${id}`).join(' or ')
-  const result = await (OpportunitiesService.getAll as unknown as LookupService)({ select: ['opportunityid', 'name', '_fmi_salesexecutive_value'], filter })
+  const result = await (OpportunitiesService.getAll as unknown as LookupService)({ select: ['opportunityid', 'name', '_fmi_salesexecutive_value', 'fmi_salestype'], filter })
   if (!result.success) throw new Error('Opportunity ownership data could not be loaded.')
-  return new Map(result.data.map((row) => [normalizeGuid(row.opportunityid), { name: asString(row.name), salesExecutiveId: normalizeGuid(row._fmi_salesexecutive_value) }]))
+  return new Map(result.data.map((row) => [normalizeGuid(row.opportunityid), { name: asString(row.name), salesExecutiveId: normalizeGuid(row._fmi_salesexecutive_value), salesType: asNullableNumber(row.fmi_salestype) }]))
 }
 
 async function getLicenceDates(ids: string[]): Promise<Map<string, { start?: string; end?: string }>> {
@@ -240,7 +242,7 @@ async function resolveQueueSalesExecutives(approvals: ApprovalSummary[]): Promis
   const opportunities = await getOpportunityRows(approvals.map((approval) => approval.opportunityId))
   const salesExecutiveIds = [...new Set([...opportunities.values()].map((row) => row.salesExecutiveId).filter(Boolean))]
   const names = await getLookupNames(SystemusersService.getAll as unknown as LookupService, 'systemuserid', 'fullname', salesExecutiveIds)
-  return approvals.map((approval) => ({ ...approval, salesExecutiveName: names.get(opportunities.get(approval.opportunityId)?.salesExecutiveId ?? '') ?? 'Unassigned' }))
+  return approvals.map((approval) => ({ ...approval, salesType: opportunities.get(approval.opportunityId)?.salesType ?? approval.salesType, salesExecutiveName: names.get(opportunities.get(approval.opportunityId)?.salesExecutiveId ?? '') ?? 'Unassigned' }))
 }
 
 async function resolveDetailLookups(approval: Fmi_dealapprovals, items: Fmi_dealapprovalitems[]): Promise<{ approval: Fmi_dealapprovals & { salesExecutiveName: string }; items: DealContentItem[] }> {
@@ -289,6 +291,7 @@ function parseApprovalSummary(value: unknown): ApprovalSummary | null {
   const dealApprovalId = normalizeGuid(record.dealApprovalId)
   if (!dealApprovalId) return null
   return {
+    salesType: asNullableNumber(record.salesType),
     dealApprovalId, opportunityId: normalizeGuid(record.opportunityId), opportunityName: asString(record.opportunityName), companyId: normalizeGuid(record.companyId), companyName: asString(record.companyName), approverId: normalizeGuid(record.approverId), approverName: asString(record.approverName), requestedById: normalizeGuid(record.requestedById), requestedByName: asString(record.requestedByName), requestedOn: asString(record.requestedOn), submittedDealValue: asNullableNumber(record.submittedDealValue), itemCount: Math.max(0, asNumber(record.itemCount)), belowForecastCount: Math.max(0, asNumber(record.belowForecastCount)), approvalStatus: asNumber(record.approvalStatus), salesExecutiveName: 'Unassigned',
   }
 }
@@ -305,22 +308,58 @@ export function parseApprovalsJson(value: unknown): ApprovalSummary[] {
 }
 
 export async function getPendingApprovals(): Promise<ApprovalSummary[]> {
+  return (await getApprovalQueue()).approvals
+}
+
+export interface ApprovalQueue {
+  approvals: ApprovalSummary[]
+  callerId: string
+  isSuperApprover: boolean
+  isReadOnlyTeamMember: boolean
+  isApproverTeamMember: boolean
+  canSubmit: boolean
+}
+
+export async function getApprovalQueue(): Promise<ApprovalQueue> {
+  const queue = await getApprovalAccess()
+  return { ...queue, approvals: await resolveQueueSalesExecutives(queue.approvals) }
+}
+
+// Uses server-resolved identity and membership; also works when a detail URL is opened directly.
+export async function getApprovalAccess(): Promise<ApprovalQueue> {
   const result = await Fmi_GetPendingDealApprovalsService.fmi_GetPendingDealApprovals()
   if (!result.success) throw new Error('The pending approval queue could not be loaded.')
-  return resolveQueueSalesExecutives(parseApprovalsJson(result.data))
+  const root = asRecord(result.data)
+  const rawJson = root?.fmi_ApprovalsJson ?? root?.ApprovalsJson ?? root?.approvalsJson
+  if (typeof rawJson !== 'string' || !rawJson.trim()) throw new Error('The pending approval response was empty.')
+  const payload = asRecord(JSON.parse(rawJson))
+  return {
+    approvals: parseApprovalsJson(result.data),
+    callerId: normalizeGuid(payload?.callerId),
+    isSuperApprover: payload?.isSuperApprover === true,
+    isReadOnlyTeamMember: payload?.isReadOnlyTeamMember === true,
+    isApproverTeamMember: payload?.isApproverTeamMember === true,
+    canSubmit: payload?.canSubmit === true,
+  }
 }
 
 export async function getApprovalDetail(id: string): Promise<ApprovalDetail> {
   const normalizedId = normalizeGuid(id)
   if (!isGuid(normalizedId)) throw new Error('The approval ID in this link is not valid.')
-  const approvalResult = await Fmi_dealapprovalsService.get(normalizedId, { select: approvalSelect })
+  const [approvalResult, access] = await Promise.all([
+    Fmi_dealapprovalsService.get(normalizedId, { select: approvalSelect }),
+    getApprovalAccess(),
+  ])
   if (!approvalResult.success || !approvalResult.data) throw new Error('The approval could not be loaded.')
   const itemResult = await Fmi_dealapprovalitemsService.getAll({ select: itemSelect, filter: `_fmi_dealapproval_value eq ${normalizedId}` })
   if (!itemResult.success) throw new Error('The approval items could not be loaded.')
   const mappedApproval = mapApprovalLabels(approvalResult.data)
   const mappedItems = (itemResult.data ?? []).map(mapItemLabels)
   const resolved = await resolveDetailLookups(mappedApproval, mappedItems)
-  return { ...resolved.approval, items: resolved.items }
+  const approverId = normalizeGuid((approvalResult.data as unknown as Record<string, unknown>)._fmi_approver_value)
+  const canDecide = approvalResult.data.fmi_approvalstatus === 1 && Boolean(access.callerId) &&
+    (access.isSuperApprover || approverId === access.callerId)
+  return { ...resolved.approval, items: resolved.items, canDecide }
 }
 
 export async function getOpportunityApprovalHistory(contractId: string): Promise<OpportunityApprovalHistory> {
