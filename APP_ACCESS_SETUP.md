@@ -1,4 +1,4 @@
-# Deal Approval Centre access (plugin 1.5.0)
+# Deal Approval Centre access (plugin 1.5.1)
 
 ## Configuration
 
@@ -8,8 +8,9 @@ Create Text environment variables in the DealApproval solution and set their cur
 | --- | --- |
 | `fmi_DealApprovalReadOnlyTeam` | Members can view all pending approvals. Does not grant decision rights. |
 | `fmi_DealApprovalApproverTeam` | Optional separate ordinary-approver team. Takes precedence over read-only membership for app mode and request submission/cancellation. Does not grant SuperApprover rights. |
+| `fmi_DealApprovalSuperApproverTeam` | Owner-team GUID whose members can view and decide all pending approvals. No hard-coded team name or GUID fallback. |
 
-The existing `Deal SuperApprover` owner team remains the source of permission to decide any pending approval. Both ordinary approver membership and SuperApprover membership take precedence over read-only membership. An assigned approver can still decide their assigned record, including when they also belong to the read-only team.
+In PP FM TEST, `fmi_DealApprovalSuperApproverTeam` points to the existing `Deal SuperApprover` owner team, preserving its membership and permissions. Both ordinary approver membership and SuperApprover membership take precedence over read-only membership. An assigned approver can still decide their assigned record, including when they also belong to the read-only team.
 
 Missing or blank team configuration grants no additional access. The current value overrides the default value; a blank current value disables that team configuration. Invalid GUIDs or multiple active current values produce a configuration error.
 
@@ -32,7 +33,7 @@ Custom APIs enforce decision authorization and block read-only-only callers from
 
 ## Deployment and validation
 
-Deploy plugin package `fmi_DealApprovalPreviewPlugin.1.5.0.nupkg` manually through Plugin Registration Tool Update Content, then use the matching code app in PP FM TEST. Existing Custom API names and registered parameter definitions are unchanged: the extra access fields are inside the existing JSON response.
+Deploy plugin package `fmi_DealApprovalPreviewPlugin.1.5.1.nupkg` manually through Plugin Registration Tool Update Content, then use the matching code app in PP FM TEST. Existing Custom API names and registered parameter definitions are unchanged: the extra access fields are inside the existing JSON response. Configure the SuperApprover environment variable before installing 1.5.1; missing configuration grants no SuperApprover access.
 
 The updated app requires the 1.5.0 access fields to enable submission/decision controls. Before the plugin update, those controls stay hidden. The new team experience also requires team configuration, app sharing and Dataverse Read permissions described above.
 

@@ -298,14 +298,14 @@ Check("GetPendingDealApprovals: a user who is neither the assigned approver nor 
     AssertEqual(0, (int)parsed["count"], "count");
 });
 
-Check("SuperApproverResolver's Team FetchXml has no statecode condition (regression guard) and keeps name/teamtype/membership criteria", () =>
+Check("SuperApproverResolver's Team FetchXml has no statecode condition (regression guard) and uses configured team ID, owner type and caller membership", () =>
 {
     // The live Dataverse Team entity in FM TEST has no statecode attribute at all - a
     // statecode condition here previously failed the whole query with "'Team' entity
     // doesn't contain attribute with Name = 'statecode'", discovered live against Deal
     // Approval f25ec6e7-4f9b-f111-b8dc-6045bdd2001c. This asserts the actual FetchXml
     // SuperApproverResolver issues (via GetPendingDealApprovals -> PendingDealApprovalsBuilder)
-    // never reintroduces it, while still constraining on team name, Owner team type, and the
+    // never reintroduces it, while still constraining on configured team ID, Owner team type, and the
     // teammembership join.
     var service = new FakeQueueOrganizationService(approvalOneId, approvalTwoId, approverAId, approverBId, superApproverUserId);
     var context = new FakePluginExecutionContext { InitiatingUserId = superApproverUserId, UserId = superApproverUserId };
@@ -322,12 +322,49 @@ Check("SuperApproverResolver's Team FetchXml has no statecode condition (regress
 
     AssertEqual(false, fetchXml.Contains("statecode", StringComparison.OrdinalIgnoreCase), "must not filter on statecode");
     AssertEqual(true, fetchXml.Contains("name='team'", StringComparison.OrdinalIgnoreCase), "must query the team entity");
-    AssertEqual(true, fetchXml.Contains("Deal SuperApprover", StringComparison.Ordinal), "must filter by the exact team name");
+    AssertEqual(false, fetchXml.Contains("Deal SuperApprover", StringComparison.Ordinal), "must not filter by hard-coded team name");
+    AssertEqual(true, fetchXml.Contains(service.SuperTeamId.ToString("D")), "must use configured team ID");
     AssertEqual(true, fetchXml.Contains("attribute='teamtype'", StringComparison.OrdinalIgnoreCase), "must filter to Owner teams");
     AssertEqual(true, fetchXml.Contains("teammembership", StringComparison.OrdinalIgnoreCase), "must join teammembership");
     AssertEqual(true, fetchXml.Contains("attribute='systemuserid'", StringComparison.OrdinalIgnoreCase), "must filter membership by the caller");
 });
 
+Check("SuperApprover current value overrides default and changing the team removes old-team access", () =>
+{
+    var service = new FakeQueueOrganizationService(approvalOneId, approvalTwoId, approverAId, approverBId, superApproverUserId) { HasSuperCurrentValue = true };
+    service.SuperCurrentValue = service.SuperTeamId.ToString("D");
+    AssertEqual(true, new SuperApproverResolver(service).IsSuperApprover(superApproverUserId), "configured team member");
+    var replacementTeam = Guid.NewGuid();
+    service.SuperCurrentValue = replacementTeam.ToString("D");
+    AssertEqual(false, new SuperApproverResolver(service).IsSuperApprover(superApproverUserId), "old team no longer grants access");
+    AssertEqual(true, service.LastTeamFetchXml!.Contains(replacementTeam.ToString("D")), "new configured team used immediately");
+});
+
+Check("Missing SuperApprover configuration does not fall back to the old team name", () =>
+{
+    var service = new FakeQueueOrganizationService(approvalOneId, approvalTwoId, approverAId, approverBId, superApproverUserId) { SuperConfigurationExists = false };
+    AssertEqual(false, new SuperApproverResolver(service).IsSuperApprover(superApproverUserId), "no configuration means no elevated access");
+    AssertEqual<string?>(null, service.LastTeamFetchXml, "no legacy lookup");
+});
+
+Check("Blank SuperApprover current value disables access even when a default exists", () =>
+{
+    var service = new FakeQueueOrganizationService(approvalOneId, approvalTwoId, approverAId, approverBId, superApproverUserId) { HasSuperCurrentValue = true, SuperCurrentValue = " " };
+    AssertEqual(false, new SuperApproverResolver(service).IsSuperApprover(superApproverUserId), "blank override disables team");
+});
+
+CheckThrows<InvalidPluginExecutionException>("Invalid SuperApprover GUID is a configuration error", () =>
+{
+    var service = new FakeQueueOrganizationService(approvalOneId, approvalTwoId, approverAId, approverBId, superApproverUserId) { HasSuperCurrentValue = true, SuperCurrentValue = "invalid-guid" };
+    new SuperApproverResolver(service).IsSuperApprover(superApproverUserId);
+}, "valid team GUID");
+
+CheckThrows<InvalidPluginExecutionException>("Duplicate SuperApprover current values are rejected", () =>
+{
+    var service = new FakeQueueOrganizationService(approvalOneId, approvalTwoId, approverAId, approverBId, superApproverUserId) { HasSuperCurrentValue = true, DuplicateSuperCurrentValue = true };
+    service.SuperCurrentValue = service.SuperTeamId.ToString("D");
+    new SuperApproverResolver(service).IsSuperApprover(superApproverUserId);
+}, "multiple current values");
 // --- FinancialSnapshotResolver: large-Opportunity condition-count regression guard --------
 //
 // Found live: an Opportunity with 168 Opportunity Items across mostly-distinct Content/Target
@@ -623,6 +660,12 @@ sealed class FakeQueueOrganizationService : IOrganizationService
     }
 
     public string? LastTeamFetchXml { get; private set; }
+    public Guid SuperTeamId { get; } = Guid.NewGuid();
+    private readonly Guid _superDefinitionId = Guid.NewGuid();
+    public bool SuperConfigurationExists { get; set; } = true;
+    public bool HasSuperCurrentValue { get; set; }
+    public string? SuperCurrentValue { get; set; }
+    public bool DuplicateSuperCurrentValue { get; set; }
     public Guid? ReadOnlyUserId { get; set; }
     public Guid? OrdinaryApproverUserId { get; set; }
     private readonly Guid _approverTeamId = Guid.NewGuid();
@@ -633,7 +676,7 @@ sealed class FakeQueueOrganizationService : IOrganizationService
         if (query is FetchExpression fetch)
         {
             LastTeamFetchXml = fetch.Query;
-            var isMember = fetch.Query.Contains(_superApproverUserId.ToString("D"), StringComparison.OrdinalIgnoreCase);
+            var isMember = fetch.Query.Contains(_superApproverUserId.ToString("D"), StringComparison.OrdinalIgnoreCase) && fetch.Query.Contains(SuperTeamId.ToString("D"), StringComparison.OrdinalIgnoreCase);
             return isMember
                 ? new EntityCollection(new List<Entity> { new Entity("team") })
                 : new EntityCollection();
@@ -643,13 +686,27 @@ sealed class FakeQueueOrganizationService : IOrganizationService
         if (qe.EntityName == "environmentvariabledefinition")
         {
             var schema = (string)qe.Criteria.Conditions.Single(c => c.AttributeName == "schemaname").Values[0];
+            if (schema == "fmi_DealApprovalSuperApproverTeam")
+            {
+                if (!SuperConfigurationExists) return new EntityCollection();
+                var superDefinition = new Entity("environmentvariabledefinition", _superDefinitionId);
+                superDefinition["defaultvalue"] = SuperTeamId.ToString("D");
+                return new EntityCollection(new List<Entity> { superDefinition });
+            }
             var isApproverConfig = schema == "fmi_DealApprovalApproverTeam";
             if (isApproverConfig ? !OrdinaryApproverUserId.HasValue : !ReadOnlyUserId.HasValue) return new EntityCollection();
             var definition = new Entity("environmentvariabledefinition", Guid.NewGuid());
             definition["defaultvalue"] = (isApproverConfig ? _approverTeamId : _readOnlyTeamId).ToString("D");
             return new EntityCollection(new List<Entity> { definition });
         }
-        if (qe.EntityName == "environmentvariablevalue") return new EntityCollection();
+        if (qe.EntityName == "environmentvariablevalue")
+        {
+            var definitionId = (Guid)qe.Criteria.Conditions.Single(c => c.AttributeName == "environmentvariabledefinitionid").Values[0];
+            if (definitionId != _superDefinitionId || !HasSuperCurrentValue) return new EntityCollection();
+            var value = new Entity("environmentvariablevalue", Guid.NewGuid());
+            value["value"] = SuperCurrentValue;
+            return new EntityCollection(DuplicateSuperCurrentValue ? new List<Entity> { value, value } : new List<Entity> { value });
+        }
         if (qe.EntityName == "teammembership")
         {
             var team = (Guid)qe.Criteria.Conditions.Single(c => c.AttributeName == "teamid").Values[0];
