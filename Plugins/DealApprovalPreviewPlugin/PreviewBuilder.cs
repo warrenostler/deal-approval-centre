@@ -35,6 +35,13 @@ namespace DealApprovalPreviewPlugin
         private const int SalesTypeInflight = 797300006;
         private const int SalesTypeHomeEntertainment = 797300007;
 
+        /// <summary>
+        /// Format Sale resolves Business Written Group from the Opportunity's Parent Format
+        /// (shared by every item), not per-item Content - see
+        /// FinancialSnapshotResolver.ResolveBusinessWrittenGroupForFormat.
+        /// </summary>
+        private const int SalesTypeFormatSale = 797300001;
+
         private readonly IOrganizationService _service;
         private readonly FinancialSnapshotResolver _resolver;
 
@@ -56,7 +63,26 @@ namespace DealApprovalPreviewPlugin
             var skipFinancialComparison = salesType == SalesTypeInflight ||
                 salesType == SalesTypeHomeEntertainment ||
                 salesType == SalesTypeAncillary;
-            var resolvedItems = _resolver.Resolve(opportunityId, skipFinancialComparison);
+
+            List<ResolvedFinancialItem> resolvedItems;
+
+            if (salesType == SalesTypeFormatSale)
+            {
+                var parentFormatRef = opportunity.GetAttributeValue<EntityReference>("fmi_parentformat");
+
+                if (parentFormatRef == null)
+                {
+                    throw new InvalidPluginExecutionException(
+                        "This Opportunity's Sales Type is Format Sale, so a Parent Format must be set before it can be previewed.");
+                }
+
+                var formatBusinessWrittenGroup = _resolver.ResolveBusinessWrittenGroupForFormat(parentFormatRef.Id);
+                resolvedItems = _resolver.Resolve(opportunityId, useFixedBusinessWrittenGroup: true, fixedBusinessWrittenGroup: formatBusinessWrittenGroup);
+            }
+            else
+            {
+                resolvedItems = _resolver.Resolve(opportunityId, skipFinancialComparison);
+            }
 
             if (resolvedItems.Count == 0 && salesType != SalesTypeAncillary)
             {
@@ -75,7 +101,7 @@ namespace DealApprovalPreviewPlugin
         {
             try
             {
-                return _service.Retrieve(OpportunityLogicalName, opportunityId, new ColumnSet("name", "fmi_salestype"));
+                return _service.Retrieve(OpportunityLogicalName, opportunityId, new ColumnSet("name", "fmi_salestype", "fmi_parentformat"));
             }
             catch (Exception)
             {

@@ -117,7 +117,25 @@ namespace DealApprovalPreviewPlugin
                 salesType == SalesTypeHomeEntertainment ||
                 salesType == SalesTypeAncillary;
 
-            var resolvedItems = _resolver.Resolve(opportunityId, skipFinancialComparison);
+            List<ResolvedFinancialItem> resolvedItems;
+
+            if (salesType == SalesTypeFormatSale)
+            {
+                var parentFormatRef = opportunity.GetAttributeValue<EntityReference>("fmi_parentformat");
+
+                if (parentFormatRef == null)
+                {
+                    throw new InvalidPluginExecutionException(
+                        "This Opportunity's Sales Type is Format Sale, so a Parent Format must be set before it can be submitted for approval.");
+                }
+
+                var formatBusinessWrittenGroup = _resolver.ResolveBusinessWrittenGroupForFormat(parentFormatRef.Id);
+                resolvedItems = _resolver.Resolve(opportunityId, useFixedBusinessWrittenGroup: true, fixedBusinessWrittenGroup: formatBusinessWrittenGroup);
+            }
+            else
+            {
+                resolvedItems = _resolver.Resolve(opportunityId, skipFinancialComparison);
+            }
 
             if (resolvedItems.Count == 0 && salesType != SalesTypeAncillary)
             {
@@ -279,7 +297,8 @@ namespace DealApprovalPreviewPlugin
                         "fmi_stage",
                         "stageid",
                         "traversedpath",
-                        "fmi_salestype"));
+                        "fmi_salestype",
+                        "fmi_parentformat"));
             }
             catch (Exception)
             {

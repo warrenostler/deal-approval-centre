@@ -55,7 +55,11 @@ namespace DealApprovalPreviewPlugin
             _service = service ?? throw new ArgumentNullException(nameof(service));
         }
 
-        public List<ResolvedFinancialItem> Resolve(Guid opportunityId, bool skipFinancialComparison = false)
+        public List<ResolvedFinancialItem> Resolve(
+            Guid opportunityId,
+            bool skipFinancialComparison = false,
+            bool useFixedBusinessWrittenGroup = false,
+            EntityReference fixedBusinessWrittenGroup = null)
         {
             var items = RetrieveOpportunityItems(opportunityId);
 
@@ -73,8 +77,9 @@ namespace DealApprovalPreviewPlugin
                 return rows.Select(BuildResolvedFinancialItemWithoutComparison).ToList();
             }
 
-            var bwgByContentId = ResolveContentToBusinessWrittenGroup(
-                rows.Select(r => r.ContentRef.Id).Distinct());
+            var bwgByContentId = useFixedBusinessWrittenGroup
+                ? rows.Select(r => r.ContentRef.Id).Distinct().ToDictionary(id => id, _ => fixedBusinessWrittenGroup)
+                : ResolveContentToBusinessWrittenGroup(rows.Select(r => r.ContentRef.Id).Distinct());
 
             var bwtByTerritoryId = ResolveTerritoryToBusinessWrittenTerritory(
                 rows.Select(r => r.TerritoryRef.Id).Distinct());
@@ -457,6 +462,53 @@ namespace DealApprovalPreviewPlugin
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Resolves the single Business Written Group mapped to a Format Sale Opportunity's
+        /// Parent Format (fmi_businesswrittengroup.fmi_format), used in place of the normal
+        /// per-item Content-&gt;BWG mapping for Format Sale. Null when no Business Written Group
+        /// is mapped to that Parent Format - a missing-financial-configuration warning for every
+        /// item, not a hard failure. More than one matching Business Written Group is a hard
+        /// failure (genuinely ambiguous data), matching ResolveContentToBusinessWrittenGroup's
+        /// ambiguity rule.
+        /// </summary>
+        public EntityReference ResolveBusinessWrittenGroupForFormat(Guid parentFormatId)
+        {
+            var fetchXml = $@"
+                <fetch>
+                  <entity name='{BusinessWrittenGroupLogicalName}'>
+                    <attribute name='fmi_businesswrittengroupid' />
+                    <attribute name='fmi_name' />
+                    <attribute name='fmi_includeinvariances' />
+                    <filter>
+                      <condition attribute='fmi_format' operator='eq' value='{parentFormatId:D}' />
+                    </filter>
+                  </entity>
+                </fetch>";
+
+            var matches = _service.RetrieveMultiple(new FetchExpression(fetchXml)).Entities;
+
+            if (matches.Count == 0)
+            {
+                return null;
+            }
+
+            if (matches.Count > 1)
+            {
+                throw new InvalidPluginExecutionException(
+                    "More than one Business Written Group is mapped to this Opportunity's Parent Format. " +
+                    "The mapping must be corrected before approval can be submitted.");
+            }
+
+            var bwg = matches[0];
+            var includeInVariances = bwg.GetAttributeValue<bool?>("fmi_includeinvariances") ?? true;
+            _includeInVariancesByBusinessWrittenGroupId[bwg.Id] = includeInVariances;
+
+            return new EntityReference(BusinessWrittenGroupLogicalName, bwg.Id)
+            {
+                Name = bwg.GetAttributeValue<string>("fmi_name")
+            };
         }
 
         private ResolvedFinancialItem BuildResolvedFinancialItemWithoutComparison(ItemRow row)
