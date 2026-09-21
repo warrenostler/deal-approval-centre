@@ -74,7 +74,7 @@ Opportunity approval status values used by the implementation:
 ```
 
 Cancellation reset rule:
-
+3
 ```text
 Offer         -> fmi_currentapprovalstatus = 1 (Not Requested)
 Unauthorised  -> fmi_currentapprovalstatus = 2 (Pending)
