@@ -1,0 +1,546 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "fmi_dealapprovaldataverse"
+        },
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        }
+      },
+      "shared_office365_1": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "fmi_sharedoffice365_cbef4"
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "Daily_Recurrence": {
+          "recurrence": {
+            "frequency": "Day",
+            "interval": 1,
+            "timeZone": "GMT Standard Time",
+            "schedule": {
+              "hours": [
+                "8"
+              ],
+              "minutes": [
+                0
+              ]
+            }
+          },
+          "evaluatedRecurrence": {
+            "frequency": "Day",
+            "interval": 1,
+            "timeZone": "GMT Standard Time",
+            "schedule": {
+              "hours": [
+                "8"
+              ],
+              "minutes": [
+                0
+              ]
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "70d3671c-781c-4756-b87d-41a767a36764"
+          },
+          "type": "Recurrence"
+        }
+      },
+      "actions": {
+        "Initialize_Approval_Centre_Url": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "f8ce2f10-c359-421e-97dd-04ba24b7e2fc"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "ApprovalCentreUrl",
+                "type": "string",
+                "value": "https://apps.powerapps.com/play/e/4b002f9f-ad17-e4a8-8582-0970ce77cdae/app/63bb01cf-9750-4567-889a-60e6e503a6ba?tenantId=a4e4c184-a05e-4cc1-844b-98a4e96a1970&hint=73d3daef-2e84-4692-ba32-a4fab46825fd&sourcetime=1787302017103"
+              }
+            ]
+          }
+        },
+        "Initialize_Recipient_Ids_Raw": {
+          "runAfter": {
+            "Initialize_Approval_Centre_Url": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "de94c7ff-6e28-4885-9f37-884639a421d0"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "RecipientIdsRaw",
+                "type": "array"
+              }
+            ]
+          }
+        },
+        "Initialize_Email_Rows_Html": {
+          "runAfter": {
+            "Initialize_Recipient_Ids_Raw": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "b4292cee-0dd9-44d0-a0d7-1a29e389b56d"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "EmailRowsHtml",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "Read_EmailSendingEnabled": {
+          "runAfter": {
+            "Initialize_Email_Rows_Html": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "environmentvariabledefinitions",
+              "fetchXml": "<fetch top=\"2\"><entity name=\"environmentvariabledefinition\"><attribute name=\"defaultvalue\"/><filter><condition attribute=\"schemaname\" operator=\"eq\" value=\"fmi_EmailSendingEnabled\"/></filter><link-entity name=\"environmentvariablevalue\" from=\"environmentvariabledefinitionid\" to=\"environmentvariabledefinitionid\" link-type=\"outer\" alias=\"current\"><attribute name=\"environmentvariablevalueid\"/><attribute name=\"value\"/><filter><condition attribute=\"statecode\" operator=\"eq\" value=\"0\"/></filter></link-entity></entity></fetch>"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "EmailSendingEnabled_Row": {
+          "type": "Compose",
+          "runAfter": {
+            "Read_EmailSendingEnabled": [
+              "Succeeded"
+            ]
+          },
+          "inputs": "@first(union(coalesce(body('Read_EmailSendingEnabled')?['value'], json('[]')), createArray(json('{}'))))"
+        },
+        "EmailSendingEnabled_Value": {
+          "type": "Compose",
+          "runAfter": {
+            "EmailSendingEnabled_Row": [
+              "Succeeded"
+            ]
+          },
+          "inputs": "@if(equals(length(body('Read_EmailSendingEnabled')?['value']), 1), if(contains(outputs('EmailSendingEnabled_Row'), 'current.environmentvariablevalueid'), coalesce(outputs('EmailSendingEnabled_Row')?['current.value'], ''), coalesce(outputs('EmailSendingEnabled_Row')?['defaultvalue'], '')), '')"
+        },
+        "Read_IsProductionEnvironment": {
+          "runAfter": {
+            "EmailSendingEnabled_Value": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "environmentvariabledefinitions",
+              "fetchXml": "<fetch top=\"2\"><entity name=\"environmentvariabledefinition\"><attribute name=\"defaultvalue\"/><filter><condition attribute=\"schemaname\" operator=\"eq\" value=\"fmi_IsProductionEnvironment\"/></filter><link-entity name=\"environmentvariablevalue\" from=\"environmentvariabledefinitionid\" to=\"environmentvariabledefinitionid\" link-type=\"outer\" alias=\"current\"><attribute name=\"environmentvariablevalueid\"/><attribute name=\"value\"/><filter><condition attribute=\"statecode\" operator=\"eq\" value=\"0\"/></filter></link-entity></entity></fetch>"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "IsProductionEnvironment_Row": {
+          "type": "Compose",
+          "runAfter": {
+            "Read_IsProductionEnvironment": [
+              "Succeeded"
+            ]
+          },
+          "inputs": "@first(union(coalesce(body('Read_IsProductionEnvironment')?['value'], json('[]')), createArray(json('{}'))))"
+        },
+        "IsProductionEnvironment_Value": {
+          "type": "Compose",
+          "runAfter": {
+            "IsProductionEnvironment_Row": [
+              "Succeeded"
+            ]
+          },
+          "inputs": "@if(equals(length(body('Read_IsProductionEnvironment')?['value']), 1), if(contains(outputs('IsProductionEnvironment_Row'), 'current.environmentvariablevalueid'), coalesce(outputs('IsProductionEnvironment_Row')?['current.value'], ''), coalesce(outputs('IsProductionEnvironment_Row')?['defaultvalue'], '')), '')"
+        },
+        "Read_TestEmailRecipient": {
+          "runAfter": {
+            "IsProductionEnvironment_Value": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "environmentvariabledefinitions",
+              "fetchXml": "<fetch top=\"2\"><entity name=\"environmentvariabledefinition\"><attribute name=\"defaultvalue\"/><filter><condition attribute=\"schemaname\" operator=\"eq\" value=\"fmi_TestEmailRecipient\"/></filter><link-entity name=\"environmentvariablevalue\" from=\"environmentvariabledefinitionid\" to=\"environmentvariabledefinitionid\" link-type=\"outer\" alias=\"current\"><attribute name=\"environmentvariablevalueid\"/><attribute name=\"value\"/><filter><condition attribute=\"statecode\" operator=\"eq\" value=\"0\"/></filter></link-entity></entity></fetch>"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "TestEmailRecipient_Row": {
+          "type": "Compose",
+          "runAfter": {
+            "Read_TestEmailRecipient": [
+              "Succeeded"
+            ]
+          },
+          "inputs": "@first(union(coalesce(body('Read_TestEmailRecipient')?['value'], json('[]')), createArray(json('{}'))))"
+        },
+        "TestEmailRecipient_Value": {
+          "type": "Compose",
+          "runAfter": {
+            "TestEmailRecipient_Row": [
+              "Succeeded"
+            ]
+          },
+          "inputs": "@if(equals(length(body('Read_TestEmailRecipient')?['value']), 1), if(contains(outputs('TestEmailRecipient_Row'), 'current.environmentvariablevalueid'), coalesce(outputs('TestEmailRecipient_Row')?['current.value'], ''), coalesce(outputs('TestEmailRecipient_Row')?['defaultvalue'], '')), '')"
+        },
+        "Is_Production": {
+          "type": "Compose",
+          "runAfter": {
+            "TestEmailRecipient_Value": [
+              "Succeeded"
+            ]
+          },
+          "inputs": "@equals(outputs('IsProductionEnvironment_Value'), '1')"
+        },
+        "If_Email_Sending_Allowed": {
+          "type": "If",
+          "runAfter": {
+            "Is_Production": [
+              "Succeeded"
+            ]
+          },
+          "expression": "@and(equals(outputs('EmailSendingEnabled_Value'), '1'), or(outputs('Is_Production'), not(empty(trim(outputs('TestEmailRecipient_Value'))))))",
+          "actions": {
+            "List_Pending_Deal_Approvals": {
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "2677dfb6-8eda-4eaa-bc92-82f954e7de94"
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_commondataserviceforapps",
+                  "operationId": "ListRecords",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+                },
+                "parameters": {
+                  "entityName": "fmi_dealapprovals",
+                  "$select": "fmi_dealapprovalid,_fmi_approver_value",
+                  "$filter": "fmi_approvalstatus eq 1",
+                  "$top": 500
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "If_Any_Pending_Approvals": {
+              "actions": {
+                "For_each_Pending_Approval": {
+                  "foreach": "@body('List_Pending_Deal_Approvals')?['value']",
+                  "actions": {
+                    "Append_Recipient_Id": {
+                      "runAfter": {},
+                      "metadata": {
+                        "operationMetadataId": "418e9fc9-a8fa-4a1d-8bb6-460944bceec4"
+                      },
+                      "type": "AppendToArrayVariable",
+                      "inputs": {
+                        "name": "RecipientIdsRaw",
+                        "value": "@items('For_each_Pending_Approval')?['_fmi_approver_value']"
+                      }
+                    }
+                  },
+                  "runAfter": {},
+                  "metadata": {
+                    "operationMetadataId": "f33b8cfe-3de7-4df6-88fe-9bd504b34acd"
+                  },
+                  "type": "Foreach",
+                  "runtimeConfiguration": {
+                    "concurrency": {
+                      "repetitions": 1
+                    }
+                  }
+                },
+                "Compose_Recipient_Ids_Distinct": {
+                  "runAfter": {
+                    "For_each_Pending_Approval": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "2a209f46-4c1b-4557-befa-8fd755283579"
+                  },
+                  "type": "Compose",
+                  "inputs": "@union(variables('RecipientIdsRaw'), variables('RecipientIdsRaw'))"
+                },
+                "For_each_Recipient": {
+                  "foreach": "@outputs('Compose_Recipient_Ids_Distinct')",
+                  "actions": {
+                    "Get_Recipient": {
+                      "runAfter": {},
+                      "metadata": {
+                        "operationMetadataId": "20668236-4e7b-4b62-9539-7192e3f80bbd"
+                      },
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connectionName": "shared_commondataserviceforapps",
+                          "operationId": "GetItem",
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+                        },
+                        "parameters": {
+                          "entityName": "systemusers",
+                          "recordId": "@items('For_each_Recipient')",
+                          "$select": "fullname,internalemailaddress"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      }
+                    },
+                    "List_My_Pending_Approvals": {
+                      "runAfter": {
+                        "Get_Recipient": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "ac012bcc-c2e8-42d7-a1ae-3a16a7b9a2fa"
+                      },
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connectionName": "shared_commondataserviceforapps",
+                          "operationId": "ListRecords",
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+                        },
+                        "parameters": {
+                          "entityName": "fmi_dealapprovals",
+                          "$select": "fmi_dealapprovalid,fmi_submitteddealvalue,createdon",
+                          "$filter": "@{concat('fmi_approvalstatus eq 1 and _fmi_approver_value eq ', items('For_each_Recipient'))}",
+                          "$expand": "fmi_Opportunity($select=opportunityid,name),fmi_SubmittedCompany($select=accountid,name)"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      }
+                    },
+                    "Reset_Email_Rows_Html": {
+                      "runAfter": {
+                        "List_My_Pending_Approvals": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "5cfd71a2-247f-4dfd-89a9-946da8e93319"
+                      },
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "EmailRowsHtml",
+                        "value": " "
+                      }
+                    },
+                    "For_each_My_Approval": {
+                      "foreach": "@body('List_My_Pending_Approvals')?['value']",
+                      "actions": {
+                        "List_Approval_Items": {
+                          "runAfter": {},
+                          "metadata": {
+                            "operationMetadataId": "01f874a2-6440-4f85-aafe-539b0a901d05"
+                          },
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connectionName": "shared_commondataserviceforapps",
+                              "operationId": "ListRecords",
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+                            },
+                            "parameters": {
+                              "entityName": "fmi_dealapprovalitems",
+                              "$select": "fmi_dealapprovalitemid",
+                              "$filter": "@{concat('_fmi_dealapproval_value eq ', items('For_each_My_Approval')?['fmi_dealapprovalid'])}"
+                            },
+                            "authentication": "@parameters('$authentication')"
+                          }
+                        },
+                        "List_BelowForecast_Items": {
+                          "runAfter": {
+                            "List_Approval_Items": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "42f6bba3-5d38-4bf3-be4e-6f64fcb787a8"
+                          },
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connectionName": "shared_commondataserviceforapps",
+                              "operationId": "ListRecords",
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+                            },
+                            "parameters": {
+                              "entityName": "fmi_dealapprovalitems",
+                              "$select": "fmi_dealapprovalitemid",
+                              "$filter": "@{concat('_fmi_dealapproval_value eq ', items('For_each_My_Approval')?['fmi_dealapprovalid'], ' and fmi_belowforecast eq true')}"
+                            },
+                            "authentication": "@parameters('$authentication')"
+                          }
+                        },
+                        "Append_to_string_variable": {
+                          "runAfter": {
+                            "List_BelowForecast_Items": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "b52c3a88-0a7d-4f2b-bc22-b597d10d1f12"
+                          },
+                          "type": "AppendToStringVariable",
+                          "inputs": {
+                            "name": "EmailRowsHtml",
+                            "value": "@concat(\r\n  '<tr><td>',\r\n  coalesce(items('For_each_My_Approval')?['fmi_SubmittedCompany']?['name'], 'Not supplied'),\r\n  '</td><td>',\r\n  coalesce(items('For_each_My_Approval')?['fmi_Opportunity']?['name'], 'Unnamed opportunity'),\r\n  '</td><td style=\"text-align:right\">',\r\n  formatNumber(coalesce(items('For_each_My_Approval')?['fmi_submitteddealvalue'], 0), 'N2'),\r\n  '</td><td>',\r\n  string(div(sub(ticks(utcNow()), ticks(items('For_each_My_Approval')?['createdon'])), 864000000000)),\r\n  ' day(s)</td><td style=\"text-align:center\">',\r\n  string(length(body('List_Approval_Items')?['value'])),\r\n  '</td><td style=\"text-align:center\">',\r\n  string(length(body('List_BelowForecast_Items')?['value'])),\r\n  '</td></tr>'\r\n)"
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Reset_Email_Rows_Html": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "3b6f2c03-7312-413d-8794-3cb32e4902fa"
+                      },
+                      "type": "Foreach",
+                      "runtimeConfiguration": {
+                        "concurrency": {
+                          "repetitions": 1
+                        }
+                      }
+                    },
+                    "Compose_Email_Body": {
+                      "runAfter": {
+                        "For_each_My_Approval": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "dbd13f2e-4640-4222-b5e9-c9cd22357aad"
+                      },
+                      "type": "Compose",
+                      "inputs": "@concat('<p>You have ', string(length(body('List_My_Pending_Approvals')?['value'])), ' Deal Approval(s) awaiting your action.</p><table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;font-family:Segoe UI,Arial,sans-serif;font-size:13px\"><tr style=\"background:#f2f2f2\"><th>Company</th><th>Deal</th><th>Submitted Value</th><th>Age</th><th>Items</th><th>Below Forecast</th></tr>', variables('EmailRowsHtml'), '</table><p style=\"margin-top:16px\"><a href=\"', variables('ApprovalCentreUrl'), '\">Open the Approval Centre</a> to review and action these approvals.</p>')"
+                    },
+                    "Send_an_email_V2": {
+                      "runAfter": {
+                        "Compose_Email_Body": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "4c583134-0af1-47cf-b3f4-623c26c7ffe6"
+                      },
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connectionName": "shared_office365_1",
+                          "operationId": "SendEmailV2",
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                        },
+                        "parameters": {
+                          "emailMessage/To": "@if(outputs('Is_Production'), body('Get_Recipient')?['internalemailaddress'], trim(outputs('TestEmailRecipient_Value')))",
+                          "emailMessage/Subject": "@concat(if(outputs('Is_Production'), '', '[TEST] '), 'Deal Approvals awaiting your action (', string(length(body('List_My_Pending_Approvals')?['value'])), ')')",
+                          "emailMessage/Body": "@if(outputs('Is_Production'), outputs('Compose_Email_Body'), concat('<p><strong>TEST EMAIL</strong> — Intended recipient: ', replace(replace(replace(coalesce(body('Get_Recipient')?['internalemailaddress'], 'Not supplied'), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '</p>', outputs('Compose_Email_Body')))",
+                          "emailMessage/Importance": "Normal"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Compose_Recipient_Ids_Distinct": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "cf5e217c-ad00-4d09-a5d1-12575ab00a0f"
+                  },
+                  "type": "Foreach",
+                  "runtimeConfiguration": {
+                    "concurrency": {
+                      "repetitions": 1
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "List_Pending_Deal_Approvals": [
+                  "Succeeded"
+                ]
+              },
+              "expression": {
+                "greater": [
+                  "@length(body('List_Pending_Deal_Approvals')?['value'])",
+                  0
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "e7724a22-fc85-46b8-95f6-ed42b818cfda"
+              },
+              "type": "If"
+            }
+          },
+          "else": {
+            "actions": {
+              "Digest_Skipped": {
+                "type": "Compose",
+                "runAfter": {},
+                "inputs": "Digest skipped: email sending is disabled or the non-production test recipient is missing."
+              }
+            }
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "templateName": ""
+  },
+  "schemaVersion": "1.0.0.0"
+}
