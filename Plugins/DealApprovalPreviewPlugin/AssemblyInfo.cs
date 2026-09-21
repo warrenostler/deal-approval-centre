@@ -1,0 +1,9 @@
+using System.Runtime.CompilerServices;
+
+// Lets DealApprovalPreviewPlugin.PluginTests exercise internal classes (FinancialSnapshotResolver,
+// SuperApproverResolver, ...) directly with fake IOrganizationService implementations, the same
+// "drive the real plugin-boundary code with a fake service" pattern already used for
+// ProcessDealApprovalDecision/GetPendingDealApprovals via their public entry points - here the
+// class under test has no public plugin entry point of its own worth standing up a full fake
+// Submit/Preview pipeline for.
+[assembly: InternalsVisibleTo("DealApprovalPreviewPlugin.PluginTests, PublicKey=00240000048000001401000006020000002400005253413100080000010001000d246ff4f24ac5fda14b2a700fe3eb9932c8e864b61e78d1cdb697513b140ab8e87cd148c70b931309d8dc6fc71d54d0921482f732b9c2531f6740f38189e5a3dab48f4f3b4292382eb1684d35b73c6d14887814885c0b2334de9254ee66437bce627aa6ececd13c273b8c0b67526cbe9e47c0fa12c1adfcb6d3f31aed63a489caf85658d6fd80b6ec8a2c8b1b2ba8686ca00dab7a3c83d2e2079337239983af4b688f5a53201f224d0f4808a32adb6b8db5ac2bf36272e183b7ff84df3329b1a8988f2d0b448ac43734e2c4e6ad23cec55fc1c106e00bae4b5978a15fbc24934b230c0bf44a3b5d5196c0bc12025c92565b8bb59a7a01f0b8462fd3961459fa")]

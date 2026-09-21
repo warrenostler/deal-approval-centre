@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <AssemblyName>fmi_DealApprovalPreviewPlugin</AssemblyName>
+    <PowerAppsTargetsPath>$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\PowerApps</PowerAppsTargetsPath>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>DealApprovalPreviewPlugin.snk</AssemblyOriginatorKeyFile>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
+    <ProjectTypeGuids>{4C25E9B5-9FA6-436c-8E19-B395D2A65FAF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+  </PropertyGroup>
+
+  <Import Project="$(PowerAppsTargetsPath)\Microsoft.PowerApps.VisualStudio.Plugin.props" Condition="Exists('$(PowerAppsTargetsPath)\Microsoft.PowerApps.VisualStudio.Plugin.props')" />
+
+  <!--
+    NuGet pack and restore as MSBuild targets reference:
+    https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets
+  -->
+  <PropertyGroup>
+    <PackageId>fmi_DealApprovalPreviewPlugin</PackageId>
+    <Version>$(FileVersion)</Version>
+    <Authors>Fremantle</Authors>
+    <Company>MyCompany</Company>
+    <Description>This is a sample nuget package which contains a Dataverse plugin and its runtime dependencies</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CrmSdk.CoreAssemblies" Version="9.0.2.*" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.PowerApps.MSBuild.Plugin" Version="1.*" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.*" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="DealApprovalPreviewPlugin.Core\DealApprovalPreviewPlugin.Core.csproj" />
+  </ItemGroup>
+
+  <!-- DealApprovalPreviewPlugin.Core, .Tests and .PluginTests are separate SDK-style projects
+       nested in subfolders here; without these excludes, this project's implicit **/*.cs glob
+       would also compile their source (and their generated obj/ files) directly into this
+       net462 assembly. -->
+  <ItemGroup>
+    <Compile Remove="DealApprovalPreviewPlugin.Core\**" />
+    <Compile Remove="DealApprovalPreviewPlugin.Tests\**" />
+    <Compile Remove="DealApprovalPreviewPlugin.PluginTests\**" />
+    <EmbeddedResource Remove="DealApprovalPreviewPlugin.Core\**" />
+    <EmbeddedResource Remove="DealApprovalPreviewPlugin.Tests\**" />
+    <EmbeddedResource Remove="DealApprovalPreviewPlugin.PluginTests\**" />
+    <None Remove="DealApprovalPreviewPlugin.Core\**" />
+    <None Remove="DealApprovalPreviewPlugin.Tests\**" />
+    <None Remove="DealApprovalPreviewPlugin.PluginTests\**" />
+  </ItemGroup>
+
+  <Import Project="$(PowerAppsTargetsPath)\Microsoft.PowerApps.VisualStudio.Plugin.targets" Condition="Exists('$(PowerAppsTargetsPath)\Microsoft.PowerApps.VisualStudio.Plugin.targets')" />
+</Project>
