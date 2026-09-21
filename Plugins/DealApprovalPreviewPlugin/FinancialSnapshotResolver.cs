@@ -91,7 +91,7 @@ namespace DealApprovalPreviewPlugin
             var budgetsByCombination = ResolveBudgets(resolved);
 
             return resolved
-                .Select(r => BuildResolvedFinancialItem(r, budgetsByCombination))
+                .Select(r => BuildResolvedFinancialItem(r, budgetsByCombination, useFixedBusinessWrittenGroup))
                 .ToList();
         }
 
@@ -533,10 +533,11 @@ namespace DealApprovalPreviewPlugin
 
         private ResolvedFinancialItem BuildResolvedFinancialItem(
             ResolvedItem resolved,
-            Dictionary<BudgetCombinationKey, BudgetRow> budgetsByCombination)
+            Dictionary<BudgetCombinationKey, BudgetRow> budgetsByCombination,
+            bool useFixedBusinessWrittenGroup)
         {
             var row = resolved.Row;
-            var financials = ResolveFinancials(resolved, budgetsByCombination);
+            var financials = ResolveFinancials(resolved, budgetsByCombination, useFixedBusinessWrittenGroup);
 
             return new ResolvedFinancialItem
             {
@@ -558,11 +559,14 @@ namespace DealApprovalPreviewPlugin
         /// Decides between a genuine financial comparison and a warning-only result, in priority
         /// order: missing BWG, then missing BWT, then no matching Budget/Forecast record for the
         /// resolved BWG+BWT+BWY combination. Only reaches FinancialCalculator.Calculate when all
-        /// three are present.
+        /// three are present. The missing-BWG message differs when resolving via a fixed
+        /// Opportunity-level Business Written Group (Format Sale's Parent Format mapping) rather
+        /// than the normal per-item Content mapping, since the real cause is different.
         /// </summary>
         private static ItemFinancialResult ResolveFinancials(
             ResolvedItem resolved,
-            Dictionary<BudgetCombinationKey, BudgetRow> budgetsByCombination)
+            Dictionary<BudgetCombinationKey, BudgetRow> budgetsByCombination,
+            bool useFixedBusinessWrittenGroup)
         {
             var row = resolved.Row;
 
@@ -570,7 +574,9 @@ namespace DealApprovalPreviewPlugin
             {
                 return ItemFinancialResult.Unavailable(
                     row.Sale,
-                    "Content is not assigned to a Business Written Group.");
+                    useFixedBusinessWrittenGroup
+                        ? "No Business Written Group is mapped to this Opportunity's Parent Format."
+                        : "Content is not assigned to a Business Written Group.");
             }
 
             if (resolved.BusinessWrittenTerritory == null)
