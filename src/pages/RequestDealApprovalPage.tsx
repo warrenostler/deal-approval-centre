@@ -1,6 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { getDealApprovalPreview, isGuid, submitDealApproval, type DealPreviewItem } from '../services/requestDealApprovalData'
+import {
+  getDealApprovalPreview,
+  isGuid,
+  submitDealApproval,
+  SALES_TYPE_HOME_ENTERTAINMENT,
+  SALES_TYPE_INFLIGHT,
+  SALES_TYPE_ANCILLARY,
+  type DealPreviewItem,
+} from '../services/requestDealApprovalData'
+
+type ReviewMode = 'full' | 'simple' | 'none'
+
+function resolveReviewMode(salesType: number | null | undefined): ReviewMode {
+  if (salesType === SALES_TYPE_ANCILLARY) return 'none'
+  if (salesType === SALES_TYPE_HOME_ENTERTAINMENT || salesType === SALES_TYPE_INFLIGHT) return 'simple'
+  return 'full'
+}
 
 type SortColumn = 'title' | 'territory' | 'businessWrittenYear' | 'sale' | 'budget' | 'latestForecast' | 'varianceToForecast' | null
 type SortDirection = 'asc' | 'desc'
@@ -67,6 +83,7 @@ function closeRequestHost() {
 export function RequestDealApprovalPage() {
   const [searchParams] = useSearchParams()
   const [items, setItems] = useState<DealPreviewItem[]>([])
+  const [salesType, setSalesType] = useState<number | null>(null)
   const [opportunityId, setOpportunityId] = useState<string>('')
   const [opportunityName, setOpportunityName] = useState('')
   const [loading, setLoading] = useState(true)
@@ -109,6 +126,7 @@ export function RequestDealApprovalPage() {
       .then((preview) => {
         if (!active) return
         setOpportunityName(preview.opportunityName || 'Opportunity')
+        setSalesType(preview.salesType ?? null)
         setItems(preview.items)
       })
       .catch((reason: unknown) => {
@@ -129,6 +147,7 @@ export function RequestDealApprovalPage() {
   }, [searchParams])
 
   const hasBelowForecast = items.some((item) => item.belowForecast === true)
+  const reviewMode = resolveReviewMode(salesType)
 
   const sortedItems = useMemo(() => {
     if (!sortColumn) return items
@@ -203,70 +222,107 @@ export function RequestDealApprovalPage() {
         </div>
       </header>
 
-      <p className="request-intro">Review the items included in this approval request.</p>
+      {reviewMode !== 'none' && <p className="request-intro">Review the items included in this approval request.</p>}
 
-      <section className="request-table-panel">
-        <div className="request-table-wrapper">
-          <table className="request-table">
-            <thead>
-              <tr>
-                <th className="sortable" onClick={() => toggleSort('title')}>
-                  <button type="button">Title {sortColumn === 'title' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
-                </th>
-                <th>Business Written Group</th>
-                <th className="sortable" onClick={() => toggleSort('territory')}>
-                  <button type="button">Territory {sortColumn === 'territory' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
-                </th>
-                <th className="sortable" onClick={() => toggleSort('businessWrittenYear')}>
-                  <button type="button">BWY {sortColumn === 'businessWrittenYear' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
-                </th>
-                <th className="sortable numeric" onClick={() => toggleSort('sale')}>
-                  <button type="button">Sale {sortColumn === 'sale' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
-                </th>
-                <th className="sortable numeric" onClick={() => toggleSort('budget')}>
-                  <button type="button">Budget {sortColumn === 'budget' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
-                </th>
-                <th className="sortable numeric" onClick={() => toggleSort('latestForecast')}>
-                  <button type="button">Latest Forecast {sortColumn === 'latestForecast' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
-                </th>
-                <th>FC</th>
-                <th className="sortable numeric" onClick={() => toggleSort('varianceToForecast')}>
-                  <button type="button">Var. to Forecast {sortColumn === 'varianceToForecast' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedItems.map((item) => {
-                const hasWarning = item.financialComparisonAvailable === false
-                const warningText = item.financialWarning || 'Financial comparison unavailable.'
-                const showNa = item.includeInVariance === false
-                return (
-                  <tr className={hasWarning ? 'request-warning-row' : undefined} key={item.opportunityItemId || `${item.title}-${item.territory}`}>
-                    <td>
-                      <div className="request-title-cell">
-                        <span>{item.title || 'Untitled item'}</span>
-                        {hasWarning && <span className="warning-badge" title={warningText}>⚠</span>}
-                      </div>
-                    </td>
-                    <td>{item.businessWrittenGroup || '-'}</td>
+      {reviewMode === 'full' && (
+        <section className="request-table-panel">
+          <div className="request-table-wrapper">
+            <table className="request-table">
+              <thead>
+                <tr>
+                  <th className="sortable" onClick={() => toggleSort('title')}>
+                    <button type="button">Title {sortColumn === 'title' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
+                  </th>
+                  <th>Business Written Group</th>
+                  <th className="sortable" onClick={() => toggleSort('territory')}>
+                    <button type="button">Territory {sortColumn === 'territory' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
+                  </th>
+                  <th className="sortable" onClick={() => toggleSort('businessWrittenYear')}>
+                    <button type="button">BWY {sortColumn === 'businessWrittenYear' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
+                  </th>
+                  <th className="sortable numeric" onClick={() => toggleSort('sale')}>
+                    <button type="button">Sale {sortColumn === 'sale' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
+                  </th>
+                  <th className="sortable numeric" onClick={() => toggleSort('budget')}>
+                    <button type="button">Budget {sortColumn === 'budget' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
+                  </th>
+                  <th className="sortable numeric" onClick={() => toggleSort('latestForecast')}>
+                    <button type="button">Latest Forecast {sortColumn === 'latestForecast' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
+                  </th>
+                  <th>FC</th>
+                  <th className="sortable numeric" onClick={() => toggleSort('varianceToForecast')}>
+                    <button type="button">Var. to Forecast {sortColumn === 'varianceToForecast' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedItems.map((item) => {
+                  const hasWarning = item.financialComparisonAvailable === false
+                  const warningText = item.financialWarning || 'Financial comparison unavailable.'
+                  const showNa = item.includeInVariance === false
+                  return (
+                    <tr className={hasWarning ? 'request-warning-row' : undefined} key={item.opportunityItemId || `${item.title}-${item.territory}`}>
+                      <td>
+                        <div className="request-title-cell">
+                          <span>{item.title || 'Untitled item'}</span>
+                          {hasWarning && <span className="warning-badge" title={warningText}>⚠</span>}
+                        </div>
+                      </td>
+                      <td>{item.businessWrittenGroup || '-'}</td>
+                      <td>{item.territory || '-'}</td>
+                      <td>{item.businessWrittenYear || '-'}</td>
+                      <td className="numeric">{formatCurrency(item.sale ?? null)}</td>
+                      <td className="numeric">{showNa ? 'N/A' : getDisplayValue(item, 'budget')}</td>
+                      <td className="numeric">{showNa ? 'N/A' : getDisplayValue(item, 'latestForecast')}</td>
+                      <td className="numeric">{showNa ? 'N/A' : getDisplayValue(item, 'latestForecastType')}</td>
+                      <td className="numeric">{showNa ? 'N/A' : getDisplayValue(item, 'varianceToForecast')}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="request-footer">
+            <span>{items.length} item{items.length === 1 ? '' : 's'}</span>
+          </div>
+        </section>
+      )}
+
+      {reviewMode === 'simple' && (
+        <section className="request-table-panel">
+          <div className="request-table-wrapper">
+            <table className="request-table">
+              <thead>
+                <tr>
+                  <th className="sortable" onClick={() => toggleSort('title')}>
+                    <button type="button">Title {sortColumn === 'title' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
+                  </th>
+                  <th className="sortable" onClick={() => toggleSort('territory')}>
+                    <button type="button">Territory {sortColumn === 'territory' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
+                  </th>
+                  <th className="sortable numeric" onClick={() => toggleSort('sale')}>
+                    <button type="button">Sale {sortColumn === 'sale' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedItems.map((item) => (
+                  <tr key={item.opportunityItemId || `${item.title}-${item.territory}`}>
+                    <td>{item.title || 'Untitled item'}</td>
                     <td>{item.territory || '-'}</td>
-                    <td>{item.businessWrittenYear || '-'}</td>
                     <td className="numeric">{formatCurrency(item.sale ?? null)}</td>
-                    <td className="numeric">{showNa ? 'N/A' : getDisplayValue(item, 'budget')}</td>
-                    <td className="numeric">{showNa ? 'N/A' : getDisplayValue(item, 'latestForecast')}</td>
-                    <td className="numeric">{showNa ? 'N/A' : getDisplayValue(item, 'latestForecastType')}</td>
-                    <td className="numeric">{showNa ? 'N/A' : getDisplayValue(item, 'varianceToForecast')}</td>
                   </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-        <div className="request-footer">
-          <span>{items.length} item{items.length === 1 ? '' : 's'}</span>
-        </div>
-      </section>
+          <div className="request-footer">
+            <span>{items.length} item{items.length === 1 ? '' : 's'}</span>
+          </div>
+        </section>
+      )}
 
       <section className="request-comment-box">
         <label htmlFor="coordinator-comment">Coordinator comment</label>

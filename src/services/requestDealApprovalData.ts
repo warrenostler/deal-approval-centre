@@ -25,8 +25,17 @@ export interface DealPreviewItem {
 export interface DealApprovalPreview {
   opportunityId?: string
   opportunityName?: string
+  salesType?: number | null
+  salesTypeLabel?: string | null
   items: DealPreviewItem[]
 }
+
+/**
+ * Sales Types with no budget/forecast comparison and their own review-screen layouts.
+ */
+export const SALES_TYPE_HOME_ENTERTAINMENT = 797300007
+export const SALES_TYPE_INFLIGHT = 797300006
+export const SALES_TYPE_ANCILLARY = 797300008
 
 export interface DealApprovalSubmissionResult {
   dealApprovalId: string
@@ -121,6 +130,8 @@ function parsePreviewJson(value: unknown): DealApprovalPreview {
   return {
     opportunityId: normalizeGuid(parseProperty(parsed, ['opportunityId', 'opportunityid'], asString)) || undefined,
     opportunityName: parseProperty(parsed, ['opportunityName', 'opportunityname'], asString) || undefined,
+    salesType: parseProperty(parsed, ['salesType', 'salestype'], (value) => (typeof value === 'number' && Number.isFinite(value) ? value : null)) ?? null,
+    salesTypeLabel: parseProperty(parsed, ['salesTypeLabel', 'salestypelabel'], asString) || null,
     items,
   }
 }
@@ -137,7 +148,7 @@ export async function getDealApprovalPreview(opportunityId: string): Promise<Dea
   }
 
   const preview = parsePreviewJson(result.data)
-  if (preview.items.length === 0) {
+  if (preview.items.length === 0 && preview.salesType !== SALES_TYPE_ANCILLARY) {
     throw new Error('The Opportunity contains no items to preview.')
   }
 

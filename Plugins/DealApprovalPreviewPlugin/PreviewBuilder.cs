@@ -20,6 +20,12 @@ namespace DealApprovalPreviewPlugin
     {
         private const string OpportunityLogicalName = "opportunity";
 
+        /// <summary>
+        /// Ancillary Opportunities never have Opportunity Items - this is the one Sales Type
+        /// where zero resolved items is expected, not a data problem.
+        /// </summary>
+        private const int SalesTypeAncillary = 797300008;
+
         private readonly IOrganizationService _service;
         private readonly FinancialSnapshotResolver _resolver;
 
@@ -37,9 +43,10 @@ namespace DealApprovalPreviewPlugin
             }
 
             var opportunity = RetrieveOpportunity(opportunityId);
+            var salesType = opportunity.GetAttributeValue<OptionSetValue>("fmi_salestype")?.Value;
             var resolvedItems = _resolver.Resolve(opportunityId);
 
-            if (resolvedItems.Count == 0)
+            if (resolvedItems.Count == 0 && salesType != SalesTypeAncillary)
             {
                 throw new InvalidPluginExecutionException(
                     "This Opportunity has no Opportunity Items, so there is nothing to preview.");
@@ -47,7 +54,7 @@ namespace DealApprovalPreviewPlugin
 
             var previewItems = resolvedItems.Select(BuildPreviewItem).ToList();
 
-            return BuildResponseJson(opportunityId, opportunity, previewItems);
+            return BuildResponseJson(opportunityId, opportunity, previewItems, salesType);
         }
 
         // --- Retrieval ------------------------------------------------------------------
@@ -56,7 +63,7 @@ namespace DealApprovalPreviewPlugin
         {
             try
             {
-                return _service.Retrieve(OpportunityLogicalName, opportunityId, new ColumnSet("name"));
+                return _service.Retrieve(OpportunityLogicalName, opportunityId, new ColumnSet("name", "fmi_salestype"));
             }
             catch (Exception)
             {
@@ -100,12 +107,14 @@ namespace DealApprovalPreviewPlugin
             };
         }
 
-        private static string BuildResponseJson(Guid opportunityId, Entity opportunity, List<Dictionary<string, object>> items)
+        private static string BuildResponseJson(Guid opportunityId, Entity opportunity, List<Dictionary<string, object>> items, int? salesType)
         {
             var response = new Dictionary<string, object>
             {
                 ["opportunityId"] = opportunityId.ToString(),
                 ["opportunityName"] = opportunity.GetAttributeValue<string>("name") ?? string.Empty,
+                ["salesType"] = (object)salesType ?? null,
+                ["salesTypeLabel"] = opportunity.FormattedValues.Contains("fmi_salestype") ? opportunity.FormattedValues["fmi_salestype"] : null,
                 ["items"] = items
             };
 

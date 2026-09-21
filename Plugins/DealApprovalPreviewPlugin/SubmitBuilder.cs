@@ -112,10 +112,11 @@ namespace DealApprovalPreviewPlugin
             }
 
             var previousApprovalRef = opportunity.GetAttributeValue<EntityReference>("fmi_currentdealapproval");
+            var salesType = opportunity.GetAttributeValue<OptionSetValue>("fmi_salestype")?.Value;
 
             var resolvedItems = _resolver.Resolve(opportunityId);
 
-            if (resolvedItems.Count == 0)
+            if (resolvedItems.Count == 0 && salesType != SalesTypeAncillary)
             {
                 throw new InvalidPluginExecutionException(
                     "This Opportunity has no Opportunity Items, so there is nothing to submit for approval.");
@@ -130,7 +131,6 @@ namespace DealApprovalPreviewPlugin
                     "comment is required before this Opportunity can be submitted for approval.");
             }
 
-            var salesType = opportunity.GetAttributeValue<OptionSetValue>("fmi_salestype")?.Value;
             var approverId = ResolveApprover(resolvedItems, salesType);
 
             var approvalType = ResolveApprovalType(opportunity);
