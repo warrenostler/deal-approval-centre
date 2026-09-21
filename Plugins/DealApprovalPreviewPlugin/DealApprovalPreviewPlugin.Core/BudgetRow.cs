@@ -20,5 +20,11 @@ namespace DealApprovalPreviewPlugin.Core
         public decimal? Fc2 { get; set; }
 
         public decimal? Fc3 { get; set; }
+
+        /// <summary>
+        /// Base-currency Budget GP (fmi_currentyearbudgetgp_base) - Format Sale only. Null when
+        /// blank on the Goal record.
+        /// </summary>
+        public decimal? BudgetGp { get; set; }
     }
 }

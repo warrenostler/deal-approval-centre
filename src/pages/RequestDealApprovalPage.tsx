@@ -4,6 +4,7 @@ import {
   getDealApprovalPreview,
   isGuid,
   submitDealApproval,
+  SALES_TYPE_FORMAT_SALE,
   SALES_TYPE_HOME_ENTERTAINMENT,
   SALES_TYPE_INFLIGHT,
   SALES_TYPE_ANCILLARY,
@@ -18,7 +19,7 @@ function resolveReviewMode(salesType: number | null | undefined): ReviewMode {
   return 'full'
 }
 
-type SortColumn = 'title' | 'territory' | 'businessWrittenYear' | 'sale' | 'budget' | 'latestForecast' | 'varianceToForecast' | null
+type SortColumn = 'title' | 'territory' | 'businessWrittenYear' | 'sale' | 'saleGp' | 'budget' | 'budgetGp' | 'latestForecast' | 'varianceToForecast' | null
 type SortDirection = 'asc' | 'desc'
 
 const moneyFormatter = new Intl.NumberFormat('en-US', {
@@ -42,12 +43,15 @@ function compareValues(left: number | string | null | undefined, right: number |
   return String(leftValue).localeCompare(String(rightValue), undefined, { numeric: true, sensitivity: 'base' })
 }
 
-function getDisplayValue(item: DealPreviewItem, field: 'budget' | 'latestForecast' | 'varianceToForecast' | 'latestForecastType'): string {
+function getDisplayValue(item: DealPreviewItem, field: 'budget' | 'budgetGp' | 'latestForecast' | 'varianceToForecast' | 'latestForecastType'): string {
   if (item.includeInVariance === false) return 'N/A'
 
   switch (field) {
     case 'budget': {
       return item.budget === null || item.budget === undefined ? '-' : formatMoney(item.budget)
+    }
+    case 'budgetGp': {
+      return item.budgetGp === null || item.budgetGp === undefined ? '-' : formatMoney(item.budgetGp)
     }
     case 'latestForecast': {
       return item.latestForecast === null || item.latestForecast === undefined ? '-' : formatMoney(item.latestForecast)
@@ -148,6 +152,8 @@ export function RequestDealApprovalPage() {
 
   const hasBelowForecast = items.some((item) => item.belowForecast === true)
   const reviewMode = resolveReviewMode(salesType)
+  const isFormatSale = salesType === SALES_TYPE_FORMAT_SALE
+  const sharedBusinessWrittenGroup = isFormatSale ? items[0]?.businessWrittenGroup : undefined
 
   const sortedItems = useMemo(() => {
     if (!sortColumn) return items
@@ -224,6 +230,10 @@ export function RequestDealApprovalPage() {
 
       {reviewMode !== 'none' && <p className="request-intro">Review the items included in this approval request.</p>}
 
+      {isFormatSale && sharedBusinessWrittenGroup && (
+        <p className="request-intro">Business Written Group: <strong>{sharedBusinessWrittenGroup}</strong></p>
+      )}
+
       {reviewMode === 'full' && (
         <section className="request-table-panel">
           <div className="request-table-wrapper">
@@ -233,7 +243,7 @@ export function RequestDealApprovalPage() {
                   <th className="sortable" onClick={() => toggleSort('title')}>
                     <button type="button">Title {sortColumn === 'title' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
                   </th>
-                  <th>Business Written Group</th>
+                  {!isFormatSale && <th>Business Written Group</th>}
                   <th className="sortable" onClick={() => toggleSort('territory')}>
                     <button type="button">Territory {sortColumn === 'territory' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
                   </th>
@@ -243,9 +253,19 @@ export function RequestDealApprovalPage() {
                   <th className="sortable numeric" onClick={() => toggleSort('sale')}>
                     <button type="button">Sale {sortColumn === 'sale' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
                   </th>
+                  {isFormatSale && (
+                    <th className="sortable numeric" onClick={() => toggleSort('saleGp')}>
+                      <button type="button">Sale GP {sortColumn === 'saleGp' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
+                    </th>
+                  )}
                   <th className="sortable numeric" onClick={() => toggleSort('budget')}>
                     <button type="button">Budget {sortColumn === 'budget' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
                   </th>
+                  {isFormatSale && (
+                    <th className="sortable numeric" onClick={() => toggleSort('budgetGp')}>
+                      <button type="button">Budget GP {sortColumn === 'budgetGp' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
+                    </th>
+                  )}
                   <th className="sortable numeric" onClick={() => toggleSort('latestForecast')}>
                     <button type="button">Latest Forecast {sortColumn === 'latestForecast' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}</button>
                   </th>
@@ -268,11 +288,13 @@ export function RequestDealApprovalPage() {
                           {hasWarning && <span className="warning-badge" title={warningText}>⚠</span>}
                         </div>
                       </td>
-                      <td>{item.businessWrittenGroup || '-'}</td>
+                      {!isFormatSale && <td>{item.businessWrittenGroup || '-'}</td>}
                       <td>{item.territory || '-'}</td>
                       <td>{item.businessWrittenYear || '-'}</td>
                       <td className="numeric">{formatCurrency(item.sale ?? null)}</td>
+                      {isFormatSale && <td className="numeric">{showNa ? 'N/A' : formatCurrency(item.saleGp ?? null)}</td>}
                       <td className="numeric">{showNa ? 'N/A' : getDisplayValue(item, 'budget')}</td>
+                      {isFormatSale && <td className="numeric">{showNa ? 'N/A' : getDisplayValue(item, 'budgetGp')}</td>}
                       <td className="numeric">{showNa ? 'N/A' : getDisplayValue(item, 'latestForecast')}</td>
                       <td className="numeric">{showNa ? 'N/A' : getDisplayValue(item, 'latestForecastType')}</td>
                       <td className="numeric">{showNa ? 'N/A' : getDisplayValue(item, 'varianceToForecast')}</td>

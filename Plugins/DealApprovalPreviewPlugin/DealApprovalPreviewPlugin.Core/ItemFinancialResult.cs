@@ -14,6 +14,15 @@ namespace DealApprovalPreviewPlugin.Core
 
         public decimal? Budget { get; set; }
 
+        /// <summary>
+        /// Base-currency GP fields - Format Sale only, always null for every other Sales Type.
+        /// SaleGp is populated whenever an item is resolved, even when the Budget comparison is
+        /// unavailable, mirroring how Sale itself is always populated.
+        /// </summary>
+        public decimal? SaleGp { get; set; }
+
+        public decimal? BudgetGp { get; set; }
+
         public decimal? Fc1 { get; set; }
 
         public decimal? Fc2 { get; set; }
@@ -58,6 +67,17 @@ namespace DealApprovalPreviewPlugin.Core
                 FinancialComparisonAvailable = false,
                 FinancialWarning = warning
             };
+        }
+
+        /// <summary>
+        /// Same as <see cref="Unavailable(decimal, string)"/> but preserves the item's own Sale
+        /// GP, which is independent of whether a Budget comparison could be made.
+        /// </summary>
+        public static ItemFinancialResult Unavailable(decimal sale, decimal? saleGp, string warning)
+        {
+            var result = Unavailable(sale, warning);
+            result.SaleGp = saleGp;
+            return result;
         }
     }
 }

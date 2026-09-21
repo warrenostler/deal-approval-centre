@@ -108,6 +108,7 @@ namespace DealApprovalPreviewPlugin
                     <attribute name='fmi_targetterritory' />
                     <attribute name='fmi_businesswrittenyear' />
                     <attribute name='fmi_actualrevenue_base' />
+                    <attribute name='fmi_actualrevenuelocalgp_base' />
                     <attribute name='fmi_licensestartdate' />
                     <attribute name='fmi_licenseenddate' />
                     <filter>
@@ -130,6 +131,7 @@ namespace DealApprovalPreviewPlugin
                 TerritoryRef = item.GetAttributeValue<EntityReference>("fmi_targetterritory"),
                 BusinessWrittenYearRef = item.GetAttributeValue<EntityReference>("fmi_businesswrittenyear"),
                 Sale = item.GetAttributeValue<Money>("fmi_actualrevenue_base")?.Value ?? 0m,
+                SaleGp = item.GetAttributeValue<Money>("fmi_actualrevenuelocalgp_base")?.Value,
                 LicenceStart = item.GetAttributeValue<DateTime?>("fmi_licensestartdate"),
                 LicenceEnd = item.GetAttributeValue<DateTime?>("fmi_licenseenddate")
             };
@@ -404,6 +406,7 @@ namespace DealApprovalPreviewPlugin
                     <attribute name='fmi_bwterritory' />
                     <attribute name='fmi_businesswrittenyear' />
                     <attribute name='fmi_currentyearbudget' />
+                    <attribute name='fmi_currentyearbudgetgp_base' />
                     <attribute name='fmi_fc1' />
                     <attribute name='fmi_fc2' />
                     <attribute name='fmi_fc3' />
@@ -426,6 +429,7 @@ namespace DealApprovalPreviewPlugin
                 {
                     BudgetId = goal.Id,
                     CurrentYearBudget = goal.GetAttributeValue<Money>("fmi_currentyearbudget")?.Value ?? 0m,
+                    BudgetGp = goal.GetAttributeValue<Money>("fmi_currentyearbudgetgp_base")?.Value,
                     Fc1 = goal.GetAttributeValue<Money>("fmi_fc1")?.Value,
                     Fc2 = goal.GetAttributeValue<Money>("fmi_fc2")?.Value,
                     Fc3 = goal.GetAttributeValue<Money>("fmi_fc3")?.Value
@@ -527,6 +531,7 @@ namespace DealApprovalPreviewPlugin
                 LicenceEnd = row.LicenceEnd,
                 Financials = ItemFinancialResult.Unavailable(
                     row.Sale,
+                    row.SaleGp,
                     "This Sales Type does not use Budget/Forecast comparison.")
             };
         }
@@ -574,6 +579,7 @@ namespace DealApprovalPreviewPlugin
             {
                 return ItemFinancialResult.Unavailable(
                     row.Sale,
+                    row.SaleGp,
                     useFixedBusinessWrittenGroup
                         ? "No Business Written Group is mapped to this Opportunity's Parent Format."
                         : "Content is not assigned to a Business Written Group.");
@@ -583,6 +589,7 @@ namespace DealApprovalPreviewPlugin
             {
                 return ItemFinancialResult.Unavailable(
                     row.Sale,
+                    row.SaleGp,
                     "Target Territory is not mapped to a Business Written Territory.");
             }
 
@@ -598,10 +605,11 @@ namespace DealApprovalPreviewPlugin
 
                 return ItemFinancialResult.Unavailable(
                     row.Sale,
+                    row.SaleGp,
                     $"No Budget/Forecast record was found for {description}.");
             }
 
-            return FinancialCalculator.Calculate(row.Sale, budget);
+            return FinancialCalculator.Calculate(row.Sale, row.SaleGp, budget);
         }
 
         private static string InCondition(string attributeName, IEnumerable<Guid> ids)
@@ -618,6 +626,7 @@ namespace DealApprovalPreviewPlugin
             public EntityReference TerritoryRef { get; set; }
             public EntityReference BusinessWrittenYearRef { get; set; }
             public decimal Sale { get; set; }
+            public decimal? SaleGp { get; set; }
             public DateTime? LicenceStart { get; set; }
             public DateTime? LicenceEnd { get; set; }
         }

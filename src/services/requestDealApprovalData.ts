@@ -8,7 +8,9 @@ export interface DealPreviewItem {
   businessWrittenGroup?: string | null
   businessWrittenYear?: string
   sale?: number | null
+  saleGp?: number | null
   budget?: number | null
+  budgetGp?: number | null
   fc1?: number | null
   fc2?: number | null
   fc3?: number | null
@@ -33,6 +35,7 @@ export interface DealApprovalPreview {
 /**
  * Sales Types with no budget/forecast comparison and their own review-screen layouts.
  */
+export const SALES_TYPE_FORMAT_SALE = 797300001
 export const SALES_TYPE_HOME_ENTERTAINMENT = 797300007
 export const SALES_TYPE_INFLIGHT = 797300006
 export const SALES_TYPE_ANCILLARY = 797300008
@@ -105,7 +108,9 @@ function mapItem(record: Record<string, unknown>): DealPreviewItem {
     businessWrittenGroup: parseProperty(record, ['businessWrittenGroup', 'businesswrittenGroup', 'businessWrittenGroupName', 'businesswrittengroup'], asString) || null,
     businessWrittenYear: parseProperty(record, ['businessWrittenYear', 'businesswrittenYear', 'businessWrittenYearName', 'businesswrittenyear'], asString) || undefined,
     sale: parseProperty(record, ['sale', 'Sale'], (value) => typeof value === 'number' && Number.isFinite(value) ? value : null) ?? null,
+    saleGp: parseProperty(record, ['saleGp', 'salegp'], (value) => typeof value === 'number' && Number.isFinite(value) ? value : null) ?? null,
     budget: parseProperty(record, ['budget', 'Budget'], (value) => typeof value === 'number' && Number.isFinite(value) ? value : null) ?? null,
+    budgetGp: parseProperty(record, ['budgetGp', 'budgetgp'], (value) => typeof value === 'number' && Number.isFinite(value) ? value : null) ?? null,
     fc1: parseProperty(record, ['fc1', 'FC1'], (value) => typeof value === 'number' && Number.isFinite(value) ? value : null) ?? null,
     fc2: parseProperty(record, ['fc2', 'FC2'], (value) => typeof value === 'number' && Number.isFinite(value) ? value : null) ?? null,
     fc3: parseProperty(record, ['fc3', 'FC3'], (value) => typeof value === 'number' && Number.isFinite(value) ? value : null) ?? null,

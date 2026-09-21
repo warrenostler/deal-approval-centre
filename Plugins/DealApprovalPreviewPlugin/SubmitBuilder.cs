@@ -484,9 +484,19 @@ namespace DealApprovalPreviewPlugin
             child["fmi_businesswrittenyear"] = new EntityReference("fmi_businesswrittenyear", draft.BusinessWrittenYearId);
             child["fmi_submittedsalevalue"] = new Money(draft.Financials.Sale);
 
+            if (draft.Financials.SaleGp.HasValue)
+            {
+                child["fmi_submittedsalegp"] = new Money(draft.Financials.SaleGp.Value);
+            }
+
             if (draft.Financials.Budget.HasValue)
             {
                 child["fmi_submittedbudgetvalue"] = new Money(draft.Financials.Budget.Value);
+            }
+
+            if (draft.Financials.BudgetGp.HasValue)
+            {
+                child["fmi_submittedbudgetgp"] = new Money(draft.Financials.BudgetGp.Value);
             }
 
             if (draft.Financials.LatestForecast.HasValue)

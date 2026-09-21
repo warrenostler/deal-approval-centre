@@ -43,6 +43,15 @@ namespace DealApprovalPreviewPlugin.Core
         /// </summary>
         public static ItemFinancialResult Calculate(decimal sale, BudgetRow budget)
         {
+            return Calculate(sale, null, budget);
+        }
+
+        /// <summary>
+        /// Same as <see cref="Calculate(decimal, BudgetRow)"/> but also carries the item's Sale
+        /// GP and the Budget's GP through - Format Sale only, null for every other Sales Type.
+        /// </summary>
+        public static ItemFinancialResult Calculate(decimal sale, decimal? saleGp, BudgetRow budget)
+        {
             var forecast = SelectLatestForecast(budget.Fc1, budget.Fc2, budget.Fc3);
 
             var belowForecast = forecast.Type != string.Empty && sale < forecast.Value;
@@ -50,7 +59,9 @@ namespace DealApprovalPreviewPlugin.Core
             return new ItemFinancialResult
             {
                 Sale = sale,
+                SaleGp = saleGp,
                 Budget = budget.CurrentYearBudget,
+                BudgetGp = budget.BudgetGp,
                 Fc1 = budget.Fc1,
                 Fc2 = budget.Fc2,
                 Fc3 = budget.Fc3,
