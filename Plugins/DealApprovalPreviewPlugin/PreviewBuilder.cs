@@ -26,6 +26,15 @@ namespace DealApprovalPreviewPlugin
         /// </summary>
         private const int SalesTypeAncillary = 797300008;
 
+        /// <summary>
+        /// Sales Types with no Budget/Forecast comparison concept at all. Content used for these
+        /// can still incidentally map to a Business Written Group/Budget meant for other Sales
+        /// Types, so the comparison must be explicitly skipped rather than left to fall through
+        /// as "no matching Budget found".
+        /// </summary>
+        private const int SalesTypeInflight = 797300006;
+        private const int SalesTypeHomeEntertainment = 797300007;
+
         private readonly IOrganizationService _service;
         private readonly FinancialSnapshotResolver _resolver;
 
@@ -44,7 +53,10 @@ namespace DealApprovalPreviewPlugin
 
             var opportunity = RetrieveOpportunity(opportunityId);
             var salesType = opportunity.GetAttributeValue<OptionSetValue>("fmi_salestype")?.Value;
-            var resolvedItems = _resolver.Resolve(opportunityId);
+            var skipFinancialComparison = salesType == SalesTypeInflight ||
+                salesType == SalesTypeHomeEntertainment ||
+                salesType == SalesTypeAncillary;
+            var resolvedItems = _resolver.Resolve(opportunityId, skipFinancialComparison);
 
             if (resolvedItems.Count == 0 && salesType != SalesTypeAncillary)
             {

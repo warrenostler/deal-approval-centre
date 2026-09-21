@@ -55,7 +55,7 @@ namespace DealApprovalPreviewPlugin
             _service = service ?? throw new ArgumentNullException(nameof(service));
         }
 
-        public List<ResolvedFinancialItem> Resolve(Guid opportunityId)
+        public List<ResolvedFinancialItem> Resolve(Guid opportunityId, bool skipFinancialComparison = false)
         {
             var items = RetrieveOpportunityItems(opportunityId);
 
@@ -67,6 +67,11 @@ namespace DealApprovalPreviewPlugin
             var rows = items.Select(ReadItemRow).ToList();
 
             ValidateRequiredLookups(rows);
+
+            if (skipFinancialComparison)
+            {
+                return rows.Select(BuildResolvedFinancialItemWithoutComparison).ToList();
+            }
 
             var bwgByContentId = ResolveContentToBusinessWrittenGroup(
                 rows.Select(r => r.ContentRef.Id).Distinct());
@@ -452,6 +457,26 @@ namespace DealApprovalPreviewPlugin
             }
 
             return result;
+        }
+
+        private ResolvedFinancialItem BuildResolvedFinancialItemWithoutComparison(ItemRow row)
+        {
+            return new ResolvedFinancialItem
+            {
+                OpportunityItemId = row.OpportunityItemId,
+                OpportunityItemName = row.Name,
+                ContentRef = row.ContentRef,
+                TargetTerritoryRef = row.TerritoryRef,
+                BusinessWrittenYearRef = row.BusinessWrittenYearRef,
+                BusinessWrittenGroupRef = null,
+                IncludeInVariance = true,
+                BusinessWrittenTerritoryRef = null,
+                LicenceStart = row.LicenceStart,
+                LicenceEnd = row.LicenceEnd,
+                Financials = ItemFinancialResult.Unavailable(
+                    row.Sale,
+                    "This Sales Type does not use Budget/Forecast comparison.")
+            };
         }
 
         private ResolvedFinancialItem BuildResolvedFinancialItem(

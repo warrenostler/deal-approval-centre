@@ -113,8 +113,11 @@ namespace DealApprovalPreviewPlugin
 
             var previousApprovalRef = opportunity.GetAttributeValue<EntityReference>("fmi_currentdealapproval");
             var salesType = opportunity.GetAttributeValue<OptionSetValue>("fmi_salestype")?.Value;
+            var skipFinancialComparison = salesType == SalesTypeInflight ||
+                salesType == SalesTypeHomeEntertainment ||
+                salesType == SalesTypeAncillary;
 
-            var resolvedItems = _resolver.Resolve(opportunityId);
+            var resolvedItems = _resolver.Resolve(opportunityId, skipFinancialComparison);
 
             if (resolvedItems.Count == 0 && salesType != SalesTypeAncillary)
             {
