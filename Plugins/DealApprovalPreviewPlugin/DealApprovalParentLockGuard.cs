@@ -20,6 +20,11 @@ namespace DealApprovalPreviewPlugin
     /// This intentionally does not touch fmi_approvalstatus, our own business approval-status
     /// choice field - that is a normal attribute governed by DealApprovalParentUpdateGuard, wholly
     /// separate from Dataverse's own statecode/statuscode record-level state.
+    ///
+    /// One exception: a caller holding the System Administrator security role is let through all
+    /// of these messages. Checked via SystemAdministratorResolver against the real human caller
+    /// (context.InitiatingUserId), using the elevated service so the check itself never depends on
+    /// what privilege that caller's own role happens to grant on this table.
     /// </summary>
     public class DealApprovalParentLockGuard : PluginBase
     {
@@ -33,6 +38,13 @@ namespace DealApprovalPreviewPlugin
             if (localPluginContext == null)
             {
                 throw new ArgumentNullException(nameof(localPluginContext));
+            }
+
+            var context = localPluginContext.PluginExecutionContext;
+            var elevatedService = localPluginContext.OrgSvcFactory.CreateOrganizationService(null);
+            if (new SystemAdministratorResolver(elevatedService).IsSystemAdministrator(context.InitiatingUserId))
+            {
+                return;
             }
 
             switch (localPluginContext.PluginExecutionContext.MessageName)

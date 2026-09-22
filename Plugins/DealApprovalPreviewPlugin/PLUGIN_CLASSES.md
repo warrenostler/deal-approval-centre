@@ -1,6 +1,6 @@
 # Deal Approval Plugin Classes
 
-Plain-English guide to the 7 plugin classes in `fmi_DealApprovalPreviewPlugin`. Each one runs on the Dataverse server, not in the browser, so it can be trusted with checks and writes that a user's own security role wouldn't otherwise allow.
+Plain-English guide to the 8 plugin classes in `fmi_DealApprovalPreviewPlugin`. Each one runs on the Dataverse server, not in the browser, so it can be trusted with checks and writes that a user's own security role wouldn't otherwise allow.
 
 ## Summary
 
@@ -13,6 +13,7 @@ Plain-English guide to the 7 plugin classes in `fmi_DealApprovalPreviewPlugin`. 
 | [CancelDealApprovalRequest](#cancledealapprovalrequest) | Custom API | Withdraws a request submitted in error |
 | [DealApprovalItemImmutabilityGuard](#dealapprovalitemimmutabilityguard) | Safety guard | Stops anyone editing the submitted figures after the fact |
 | [DealApprovalParentLockGuard](#dealapprovalparentlockguard) | Safety guard | Stops a submitted approval record being deleted, reassigned, or deactivated |
+| [DealApprovalDirectDecisionSync](#dealapprovaldirectdecisionsync) | Sync guard | Lets a System Administrator Approve/Reject by editing Approval Status directly on the record |
 
 ---
 
@@ -50,13 +51,19 @@ Plain-English guide to the 7 plugin classes in `fmi_DealApprovalPreviewPlugin`. 
 
 **Topline:** A tamper-proof seal on the submitted deal figures.
 
-**How it works:** Once a deal's individual line-item snapshots are created at submission time, nothing and nobody is allowed to edit, delete, reassign, or deactivate them — not even an administrator through the normal UI. This guard blocks every one of those actions outright, no exceptions. It exists because these snapshots are the audit record of exactly what an approver was shown when they made their decision, so they need to stay exactly as they were at that moment, permanently.
+**How it works:** Once a deal's individual line-item snapshots are created at submission time, nobody can edit, delete, reassign, or deactivate them through the normal UI — except a System Administrator, who is let through all of those actions. It exists because these snapshots are the audit record of exactly what an approver was shown when they made their decision, so outside of that admin override they need to stay exactly as they were at that moment, permanently.
 
 ## DealApprovalParentLockGuard
 
 **Topline:** The same kind of protection as above, but for the approval record itself rather than its line items.
 
-**How it works:** A submitted approval record can still have its status updated (that's how decisions and cancellations work), but it can never be deleted, handed to a different owner, or switched active/inactive. This guard blocks those specific actions unconditionally, keeping the approval as a permanent, trustworthy record of what happened and when.
+**How it works:** A submitted approval record can still have its status updated (that's how decisions and cancellations work). Beyond that, it can never be deleted, handed to a different owner, or switched active/inactive — except by a System Administrator, who is let through those actions too. For everyone else, this guard blocks those specific actions unconditionally, keeping the approval as a permanent, trustworthy record of what happened and when.
+
+## DealApprovalDirectDecisionSync
+
+**Topline:** Lets a System Administrator Approve or Reject a deal by changing the Approval Status field directly on the record in the app, instead of only through the app's Approve/Reject buttons.
+
+**How it works:** Ordinary users can't reach this at all — they don't have permission to edit the record directly. For a System Administrator who does, this makes a direct edit behave exactly like going through Approve/Reject: it only allows the change while the deal is still Pending, still requires a comment when rejecting, records who made the call and when, and updates the linked Opportunity in the same instant — so the record never ends up half-updated, whichever way the decision was made.
 
 ---
 

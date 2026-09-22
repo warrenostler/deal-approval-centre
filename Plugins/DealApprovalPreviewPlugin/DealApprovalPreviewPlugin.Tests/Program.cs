@@ -706,6 +706,26 @@ Check("DecisionBy is the real caller even though the write itself runs on an ele
     AssertEqual(ceoSuperApprover, draft.DecisionBy, "DecisionBy");
 });
 
+// --- DirectDecisionMapper: raw fmi_approvalstatus -> DealApprovalDecision, for a System
+// Administrator's direct field edit in the model-driven app (DealApprovalDirectDecisionSync) ----
+
+Check("Approved status maps back to Approve", () =>
+{
+    AssertEqual(DealApprovalDecision.Approve, DirectDecisionMapper.FromApprovalStatus(DealApprovalStatus.Approved), "Decision");
+});
+
+Check("Rejected status maps back to Reject", () =>
+{
+    AssertEqual(DealApprovalDecision.Reject, DirectDecisionMapper.FromApprovalStatus(DealApprovalStatus.Rejected), "Decision");
+});
+
+Check("Pending, Cancelled and Failed are not valid direct-edit decision targets", () =>
+{
+    AssertEqual(null, DirectDecisionMapper.FromApprovalStatus(DealApprovalStatus.Pending), "Pending");
+    AssertEqual(null, DirectDecisionMapper.FromApprovalStatus(DealApprovalStatus.Cancelled), "Cancelled");
+    AssertEqual(null, DirectDecisionMapper.FromApprovalStatus(DealApprovalStatus.Failed), "Failed");
+});
+
 Console.WriteLine();
 Console.WriteLine($"{total - failures}/{total} passed");
 

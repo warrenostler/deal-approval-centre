@@ -15,6 +15,13 @@ namespace DealApprovalPreviewPlugin
     /// here at all. fmi_dealapprovalitem is UserOwned (confirmed from the FM TEST solution
     /// export's Entity.xml OwnershipTypeMask), so Assign/SetState are real, callable messages
     /// here, not hypothetical ones.
+    ///
+    /// One exception: a caller holding the System Administrator security role is let through all
+    /// of these messages. Checked via SystemAdministratorResolver against the real human caller
+    /// (context.InitiatingUserId), using the elevated service so the check itself never depends on
+    /// what privilege that caller's own role happens to grant on this table. Note this trades away
+    /// the "permanent, unedited audit trail" guarantee described above whenever an admin actually
+    /// uses this bypass.
     /// </summary>
     public class DealApprovalItemImmutabilityGuard : PluginBase
     {
@@ -28,6 +35,13 @@ namespace DealApprovalPreviewPlugin
             if (localPluginContext == null)
             {
                 throw new ArgumentNullException(nameof(localPluginContext));
+            }
+
+            var context = localPluginContext.PluginExecutionContext;
+            var elevatedService = localPluginContext.OrgSvcFactory.CreateOrganizationService(null);
+            if (new SystemAdministratorResolver(elevatedService).IsSystemAdministrator(context.InitiatingUserId))
+            {
+                return;
             }
 
             switch (localPluginContext.PluginExecutionContext.MessageName)
