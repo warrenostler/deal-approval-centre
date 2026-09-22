@@ -172,7 +172,7 @@ class RoutingTests(unittest.TestCase):
         recipient_actions = GATE["actions"]["If_Any_Pending_Approvals"]["actions"]["For_each_Recipient"]["actions"]
         headers = recipient_actions["Compose_Email_Body"]["inputs"]
         expected = (
-            "<th>Company</th><th>Deal</th><th>Deal Type</th><th>Sales Executive</th>"
+            "<th>Client</th><th>Deal</th><th>Deal Type</th><th>Sales Executive</th>"
             "<th>Deal Value (USD)</th><th>Days Pending Approval</th><th>Items</th><th>Below Forecast</th>"
         )
         self.assertIn(expected, headers)

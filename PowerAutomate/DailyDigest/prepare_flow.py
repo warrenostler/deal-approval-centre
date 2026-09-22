@@ -106,7 +106,7 @@ recipient_actions["For_each_My_Approval"]["actions"]["Append_to_string_variable"
   string(length(body('List_BelowForecast_Items')?['value'])),
   '</td></tr>'
 )"""
-recipient_actions["Compose_Email_Body"]["inputs"] = """@concat('<p>You have ', string(length(body('List_My_Pending_Approvals')?['value'])), ' Deal Approval(s) awaiting your action.</p><table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-family:Segoe UI,Arial,sans-serif;font-size:13px"><tr style="background:#f2f2f2"><th>Company</th><th>Deal</th><th>Deal Type</th><th>Sales Executive</th><th>Deal Value (USD)</th><th>Days Pending Approval</th><th>Items</th><th>Below Forecast</th></tr>', variables('EmailRowsHtml'), '</table><p style="margin-top:16px"><a href="', variables('ApprovalCentreUrl'), '">Open the Approval Centre</a> to review and action these approvals.</p>')"""
+recipient_actions["Compose_Email_Body"]["inputs"] = """@concat('<p>You have ', string(length(body('List_My_Pending_Approvals')?['value'])), ' Deal Approval(s) awaiting your action.</p><table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-family:Segoe UI,Arial,sans-serif;font-size:13px"><tr style="background:#f2f2f2"><th>Client</th><th>Deal</th><th>Deal Type</th><th>Sales Executive</th><th>Deal Value (USD)</th><th>Days Pending Approval</th><th>Items</th><th>Below Forecast</th></tr>', variables('EmailRowsHtml'), '</table><p style="margin-top:16px"><a href="', variables('ApprovalCentreUrl'), '">Open the Approval Centre</a> to review and action these approvals.</p>')"""
 operation_ids = {
     "Read_EmailSendingEnabled": "244dc15a-6185-47af-be81-87177a09472c",
     "EmailSendingEnabled_Row": "3131cfcb-20b7-428a-a12b-6c3b378efadc",

@@ -25,7 +25,7 @@ If sending is disabled, the flow completes without querying pending approvals or
 
 The schedule remains daily at 08:00 UK time. Existing queries, digest content, loops, connections and the Approval Centre URL are preserved. The URL still points to PP FM TEST and must be configured appropriately before production use.
 
-The digest table shows Company, Deal, Deal Type, Sales Executive, Deal Value (USD), Days Pending Approval, Items and Below Forecast. Rows are ordered by Deal Value from highest to lowest for each recipient.
+The digest table shows Client, Deal, Deal Type, Sales Executive, Deal Value (USD), Days Pending Approval, Items and Below Forecast. Rows are ordered by Deal Value from highest to lowest for each recipient.
 
 ## Testing
 
