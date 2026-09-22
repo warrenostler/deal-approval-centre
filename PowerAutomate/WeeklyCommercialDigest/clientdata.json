@@ -319,7 +319,7 @@
           },
           "expression": "@and(equals(outputs('EmailSendingEnabled_Value'), '1'), if(outputs('Is_Production'), not(empty(trim(outputs('WeeklyCommercialDigestRecipients_Value')))), not(empty(trim(outputs('TestEmailRecipient_Value'))))))",
           "actions": {
-            "Get_Digest_State": {
+            "Get_Latest_Digest_Process": {
               "runAfter": {},
               "metadata": {
                 "operationMetadataId": "12931572-2e5a-5954-99b9-5190b768eb00"
@@ -332,39 +332,40 @@
                   "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
                 },
                 "parameters": {
-                  "entityName": "fmi_digeststates",
-                  "$select": "fmi_digeststateid,fmi_name,fmi_lastsuccessfulcutoff",
-                  "$filter": "fmi_name eq 'Weekly Commercial Approval Digest'",
-                  "$top": 2
+                  "entityName": "fmi_systemprocesses",
+                  "$select": "fmi_systemprocessid,fmi_name,fmi_startdate",
+                  "$filter": "fmi_processtype eq 797300004 and fmi_startdate ne null",
+                  "$orderby": "fmi_startdate desc",
+                  "$top": 1
                 },
                 "authentication": "@parameters('$authentication')"
               }
             },
-            "Digest_State_Row": {
+            "Latest_Digest_Process": {
               "type": "Compose",
               "runAfter": {
-                "Get_Digest_State": [
+                "Get_Latest_Digest_Process": [
                   "Succeeded"
                 ]
               },
               "metadata": {
                 "operationMetadataId": "d4d28982-8529-5808-b2f2-edb9b6ecb8c1"
               },
-              "inputs": "@first(union(coalesce(body('Get_Digest_State')?['value'], json('[]')), createArray(json('{}'))))"
+              "inputs": "@first(union(coalesce(body('Get_Latest_Digest_Process')?['value'], json('[]')), createArray(json('{}'))))"
             },
             "Last_Successful_Cutoff_Utc": {
               "type": "Compose",
               "runAfter": {
-                "Digest_State_Row": [
+                "Latest_Digest_Process": [
                   "Succeeded"
                 ]
               },
               "metadata": {
                 "operationMetadataId": "41f074c4-fe4c-596a-9074-f16538a95547"
               },
-              "inputs": "@if(equals(length(body('Get_Digest_State')?['value']), 1), coalesce(outputs('Digest_State_Row')?['fmi_lastsuccessfulcutoff'], ''), '')"
+              "inputs": "@if(equals(length(body('Get_Latest_Digest_Process')?['value']), 1), coalesce(outputs('Latest_Digest_Process')?['fmi_startdate'], ''), '')"
             },
-            "If_Digest_State_Valid": {
+            "If_Digest_Process_Valid": {
               "actions": {
                 "List_Approved_Deals": {
                   "runAfter": {},
@@ -469,7 +470,7 @@
                         "authentication": "@parameters('$authentication')"
                       }
                     },
-                    "Update_Last_Successful_Cutoff": {
+                    "Create_Successful_Digest_Process": {
                       "runAfter": {
                         "Send_Weekly_Commercial_Digest": [
                           "Succeeded"
@@ -482,13 +483,18 @@
                       "inputs": {
                         "host": {
                           "connectionName": "shared_commondataserviceforapps",
-                          "operationId": "UpdateRecord",
+                          "operationId": "CreateRecord",
                           "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
                         },
                         "parameters": {
-                          "entityName": "fmi_digeststates",
-                          "recordId": "@outputs('Digest_State_Row')?['fmi_digeststateid']",
-                          "item/fmi_lastsuccessfulcutoff": "@outputs('Run_Cutoff_Utc')"
+                          "entityName": "fmi_systemprocesses",
+                          "item/fmi_name": "@concat('Weekly Commercial Approval Digest - ', outputs('Run_Cutoff_Utc'))",
+                          "item/fmi_businesswrittenyear@odata.bind": null,
+                          "item/fmi_processtype": 797300004,
+                          "item/fmi_startdate": "@outputs('Run_Cutoff_Utc')",
+                          "item/fmi_rowsprocessed": "@length(body('List_Approved_Deals')?['value'])",
+                          "item/fmi_errors": 0,
+                          "item/fmi_log": "@concat('Digest email sent successfully for approvals after ', outputs('Last_Successful_Cutoff_Utc'), ' and through ', outputs('Run_Cutoff_Utc'), '.')"
                         },
                         "authentication": "@parameters('$authentication')"
                       }
@@ -528,20 +534,20 @@
                   "Succeeded"
                 ]
               },
-              "expression": "@and(equals(length(body('Get_Digest_State')?['value']), 1), not(empty(outputs('Last_Successful_Cutoff_Utc'))))",
+              "expression": "@and(equals(length(body('Get_Latest_Digest_Process')?['value']), 1), not(empty(outputs('Last_Successful_Cutoff_Utc'))))",
               "metadata": {
                 "operationMetadataId": "ba5ae518-7570-526e-b5ac-da4b82f5bd78"
               },
               "type": "If",
               "else": {
                 "actions": {
-                  "Invalid_Digest_State": {
+                  "Invalid_Digest_Process": {
                     "type": "Compose",
                     "runAfter": {},
                     "metadata": {
                       "operationMetadataId": "d7ed0972-76f2-596e-9da2-c3927808340e"
                     },
-                    "inputs": "Digest skipped: exactly one initialized Digest State row is required."
+                    "inputs": "Digest skipped: an initialized Weekly Commercial Approval Digest System Process is required."
                   }
                 }
               }

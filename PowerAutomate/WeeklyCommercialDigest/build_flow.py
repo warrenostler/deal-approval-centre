@@ -6,6 +6,7 @@ from pathlib import Path
 
 
 HERE = Path(__file__).parent
+WEEKLY_DIGEST_PROCESS_TYPE = 797300004
 
 
 _metadata_counter = 0
@@ -192,12 +193,23 @@ approved_actions = {
     },
     "Compose_Email_Body": compose(email_body, {"For_each_Approved_Deal": ["Succeeded"]}),
     "Send_Weekly_Commercial_Digest": send_action,
-    "Update_Last_Successful_Cutoff": dataverse_action(
-        "UpdateRecord",
+    "Create_Successful_Digest_Process": dataverse_action(
+        "CreateRecord",
         {
-            "entityName": "fmi_digeststates",
-            "recordId": "@outputs('Digest_State_Row')?['fmi_digeststateid']",
-            "item/fmi_lastsuccessfulcutoff": "@outputs('Run_Cutoff_Utc')",
+            "entityName": "fmi_systemprocesses",
+            "item/fmi_name": (
+                "@concat('Weekly Commercial Approval Digest - ', outputs('Run_Cutoff_Utc'))"
+            ),
+            "item/fmi_businesswrittenyear@odata.bind": None,
+            "item/fmi_processtype": WEEKLY_DIGEST_PROCESS_TYPE,
+            "item/fmi_startdate": "@outputs('Run_Cutoff_Utc')",
+            "item/fmi_rowsprocessed": "@length(body('List_Approved_Deals')?['value'])",
+            "item/fmi_errors": 0,
+            "item/fmi_log": (
+                "@concat('Digest email sent successfully for approvals after ', "
+                "outputs('Last_Successful_Cutoff_Utc'), ' and through ', "
+                "outputs('Run_Cutoff_Utc'), '.')"
+            ),
         },
         {"Send_Weekly_Commercial_Digest": ["Succeeded"]},
     ),
@@ -243,38 +255,39 @@ state_valid_actions = {
 }
 
 gate_actions = {
-    "Get_Digest_State": dataverse_action(
+    "Get_Latest_Digest_Process": dataverse_action(
         "ListRecords",
         {
-            "entityName": "fmi_digeststates",
-            "$select": "fmi_digeststateid,fmi_name,fmi_lastsuccessfulcutoff",
-            "$filter": "fmi_name eq 'Weekly Commercial Approval Digest'",
-            "$top": 2,
+            "entityName": "fmi_systemprocesses",
+            "$select": "fmi_systemprocessid,fmi_name,fmi_startdate",
+            "$filter": f"fmi_processtype eq {WEEKLY_DIGEST_PROCESS_TYPE} and fmi_startdate ne null",
+            "$orderby": "fmi_startdate desc",
+            "$top": 1,
         },
         {},
     ),
-    "Digest_State_Row": compose(
-        "@first(union(coalesce(body('Get_Digest_State')?['value'], json('[]')), createArray(json('{}'))))",
-        {"Get_Digest_State": ["Succeeded"]},
+    "Latest_Digest_Process": compose(
+        "@first(union(coalesce(body('Get_Latest_Digest_Process')?['value'], json('[]')), createArray(json('{}'))))",
+        {"Get_Latest_Digest_Process": ["Succeeded"]},
     ),
     "Last_Successful_Cutoff_Utc": compose(
-        "@if(equals(length(body('Get_Digest_State')?['value']), 1), "
-        "coalesce(outputs('Digest_State_Row')?['fmi_lastsuccessfulcutoff'], ''), '')",
-        {"Digest_State_Row": ["Succeeded"]},
+        "@if(equals(length(body('Get_Latest_Digest_Process')?['value']), 1), "
+        "coalesce(outputs('Latest_Digest_Process')?['fmi_startdate'], ''), '')",
+        {"Latest_Digest_Process": ["Succeeded"]},
     ),
-    "If_Digest_State_Valid": {
+    "If_Digest_Process_Valid": {
         "actions": state_valid_actions,
         "runAfter": {"Last_Successful_Cutoff_Utc": ["Succeeded"]},
         "expression": (
-            "@and(equals(length(body('Get_Digest_State')?['value']), 1), "
+            "@and(equals(length(body('Get_Latest_Digest_Process')?['value']), 1), "
             "not(empty(outputs('Last_Successful_Cutoff_Utc'))))"
         ),
         "metadata": metadata(),
         "type": "If",
         "else": {
             "actions": {
-                "Invalid_Digest_State": compose(
-                    "Digest skipped: exactly one initialized Digest State row is required.",
+                "Invalid_Digest_Process": compose(
+                    "Digest skipped: an initialized Weekly Commercial Approval Digest System Process is required.",
                     {},
                 )
             }

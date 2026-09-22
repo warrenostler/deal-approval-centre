@@ -23,10 +23,10 @@ In a non-production environment, the flow sends only to `fmi_TestEmailRecipient`
 
 ## Checkpoint
 
-The organization-owned `fmi_DigestState` table stores runtime checkpoints. The row named `Weekly Commercial Approval Digest` holds `fmi_LastSuccessfulCutoff`. The flow captures `utcNow()` before querying, uses an exclusive lower bound and inclusive upper bound, then advances the checkpoint to that captured cutoff only after the email action succeeds. Disabled sending, invalid configuration, flow failure, and a run with no approved deals leave the checkpoint unchanged.
+The existing `fmi_SystemProcess` table stores the checkpoint using Process Type `Weekly Commercial Approval Digest` (`797300004`). This follows the table's existing timestamped checkpoint pattern. The latest matching row's `Start Date` is the previous successful cutoff.
 
-The PP FM TEST checkpoint is initially seeded to `2026-09-01T00:00:00Z`, so the first delivery test includes all qualifying approvals after that point. Each environment has independent state.
+The flow captures `utcNow()` before querying, uses an exclusive lower bound and inclusive upper bound, then creates a new successful System Process row with that captured cutoff only after the email action succeeds. The row also records the number of deals included and a short execution log. Business Written Year is intentionally empty because the digest spans commercial approvals rather than one business year. Disabled sending, invalid configuration, flow failure, and a run with no approved deals leave the checkpoint unchanged.
 
-Digest State is available in the Fremantle CRM sitemap under App Settings > General Settings. The sitemap item requires Read access to `fmi_DigestState`, so users without that table privilege do not see it. PP FM TEST currently grants Digest State privileges only to System Administrator, System Customizer, and built-in Dataverse service roles; normal Deal Approval users have no access.
+PP FM TEST preserves the previous Digest State cutoff of `2026-09-22T09:02:13Z` in its initial System Process row. Each environment needs one initial row when the flow is first deployed. System Processes are already available in the Fremantle CRM app.
 
 Local validation: `python PowerAutomate/WeeklyCommercialDigest/test_flow.py`.

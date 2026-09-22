@@ -7,8 +7,8 @@ FLOW = json.loads(Path(__file__).with_name("clientdata.json").read_text(encoding
 DEFINITION = FLOW["properties"]["definition"]
 ACTIONS = DEFINITION["actions"]
 GATE = ACTIONS["If_Email_Sending_Allowed"]
-STATE_CHECK = GATE["actions"]["If_Digest_State_Valid"]
-DEALS_CHECK = STATE_CHECK["actions"]["If_Approved_Deals_Found"]
+PROCESS_CHECK = GATE["actions"]["If_Digest_Process_Valid"]
+DEALS_CHECK = PROCESS_CHECK["actions"]["If_Approved_Deals_Found"]
 SEND_BRANCH = DEALS_CHECK["actions"]
 
 
@@ -41,7 +41,7 @@ class WeeklyDigestFlowTests(unittest.TestCase):
         self.assertIn("equals(outputs('EmailSendingEnabled_Value'), '1')", GATE["expression"])
 
     def test_query_uses_decision_timestamp_and_bounded_checkpoint_window(self):
-        query = STATE_CHECK["actions"]["List_Approved_Deals"]["inputs"]["parameters"]
+        query = PROCESS_CHECK["actions"]["List_Approved_Deals"]["inputs"]["parameters"]
         self.assertIn("fmi_approvalstatus eq 2", query["$filter"])
         self.assertIn("fmi_decisionon gt ", query["$filter"])
         self.assertIn("fmi_decisionon le ", query["$filter"])
@@ -81,19 +81,33 @@ class WeeklyDigestFlowTests(unittest.TestCase):
         self.assertIn("'[TEST] '", parameters["emailMessage/Subject"])
         self.assertIn("Production recipients:", parameters["emailMessage/Body"])
 
-    def test_checkpoint_advances_only_after_successful_email(self):
-        updates = [
+    def test_system_process_checkpoint_is_created_only_after_successful_email(self):
+        creates = [
             (path, action)
             for path, action in walk(ACTIONS)
             if isinstance(action.get("inputs"), dict)
-            and action["inputs"].get("host", {}).get("operationId") == "UpdateRecord"
+            and action["inputs"].get("host", {}).get("operationId") == "CreateRecord"
         ]
-        self.assertEqual([path for path, _ in updates], [
-            "If_Email_Sending_Allowed/If_Digest_State_Valid/If_Approved_Deals_Found/Update_Last_Successful_Cutoff"
+        self.assertEqual([path for path, _ in creates], [
+            "If_Email_Sending_Allowed/If_Digest_Process_Valid/If_Approved_Deals_Found/Create_Successful_Digest_Process"
         ])
-        update = updates[0][1]
-        self.assertEqual(update["runAfter"], {"Send_Weekly_Commercial_Digest": ["Succeeded"]})
-        self.assertEqual(update["inputs"]["parameters"]["item/fmi_lastsuccessfulcutoff"], "@outputs('Run_Cutoff_Utc')")
+        create = creates[0][1]
+        parameters = create["inputs"]["parameters"]
+        self.assertEqual(create["runAfter"], {"Send_Weekly_Commercial_Digest": ["Succeeded"]})
+        self.assertEqual(parameters["entityName"], "fmi_systemprocesses")
+        self.assertIsNone(parameters["item/fmi_businesswrittenyear@odata.bind"])
+        self.assertEqual(parameters["item/fmi_processtype"], 797300004)
+        self.assertEqual(parameters["item/fmi_startdate"], "@outputs('Run_Cutoff_Utc')")
+        self.assertIn("List_Approved_Deals", parameters["item/fmi_rowsprocessed"])
+
+    def test_latest_matching_system_process_supplies_the_cutoff(self):
+        latest = GATE["actions"]["Get_Latest_Digest_Process"]["inputs"]["parameters"]
+        self.assertEqual(latest["entityName"], "fmi_systemprocesses")
+        self.assertEqual(latest["$filter"], "fmi_processtype eq 797300004 and fmi_startdate ne null")
+        self.assertEqual(latest["$orderby"], "fmi_startdate desc")
+        self.assertEqual(latest["$top"], 1)
+        self.assertIn("fmi_startdate", GATE["actions"]["Last_Successful_Cutoff_Utc"]["inputs"])
+        self.assertNotIn("fmi_digeststate", json.dumps(ACTIONS).lower())
 
     def test_only_one_email_action_exists_inside_all_safety_gates(self):
         sends = [
@@ -103,7 +117,7 @@ class WeeklyDigestFlowTests(unittest.TestCase):
             and action["inputs"].get("host", {}).get("operationId") == "SendEmailV2"
         ]
         self.assertEqual([path for path, _ in sends], [
-            "If_Email_Sending_Allowed/If_Digest_State_Valid/If_Approved_Deals_Found/Send_Weekly_Commercial_Digest"
+            "If_Email_Sending_Allowed/If_Digest_Process_Valid/If_Approved_Deals_Found/Send_Weekly_Commercial_Digest"
         ])
 
 
