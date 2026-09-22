@@ -382,7 +382,7 @@
                       "entityName": "fmi_dealapprovals",
                       "$select": "fmi_dealapprovalid,fmi_submitteddealvalue,fmi_decisionon",
                       "$filter": "@concat('fmi_approvalstatus eq 2 and fmi_decisionon gt ', outputs('Last_Successful_Cutoff_Utc'), ' and fmi_decisionon le ', outputs('Run_Cutoff_Utc'))",
-                      "$expand": "fmi_Opportunity($select=opportunityid,name,fmi_salestype;$expand=fmi_salesexecutive($select=fullname)),fmi_SubmittedCompany($select=accountid,name)",
+                      "$expand": "fmi_Opportunity($select=opportunityid,name,fmi_salestype;$expand=fmi_salesexecutive($select=fullname)),fmi_SubmittedCompany($select=accountid,name),fmi_DecisionBy($select=fullname)",
                       "$orderby": "fmi_submitteddealvalue desc",
                       "$top": 5000
                     },
@@ -409,7 +409,11 @@
                           "type": "AppendToStringVariable",
                           "inputs": {
                             "name": "EmailRowsHtml",
-                            "value": "@concat(\n  '<tr><td>',\n  coalesce(items('For_each_Approved_Deal')?['fmi_SubmittedCompany']?['name'], 'Not supplied'),\n  '</td><td>',\n  coalesce(items('For_each_Approved_Deal')?['fmi_Opportunity']?['name'], 'Unnamed opportunity'),\n  '</td><td>',\n  coalesce(items('For_each_Approved_Deal')?['fmi_Opportunity']?['fmi_salestype@OData.Community.Display.V1.FormattedValue'], 'Not supplied'),\n  '</td><td>',\n  coalesce(items('For_each_Approved_Deal')?['fmi_Opportunity']?['fmi_salesexecutive']?['fullname'], 'Not supplied'),\n  '</td><td style=\"text-align:right\">',\n  formatNumber(coalesce(items('For_each_Approved_Deal')?['fmi_submitteddealvalue'], 0), 'N2'),\n  '</td><td>',\n  formatDateTime(items('For_each_Approved_Deal')?['fmi_decisionon'], 'dd MMM yyyy HH:mm', 'en-GB'),\n  ' UTC</td></tr>'\n)"
+                            "value": "@concat(\n  '<tr><td>',\n  coalesce(items('For_each_Approved_Deal')?['fmi_SubmittedCompany']?['name'], 'Not supplied'),\n  '</td><td>',\n  coalesce(items('For_each_Approved_Deal')?['fmi_Opportunity']?['name'], 'Unnamed opportunity'),\n  '</td><td>',\n  coalesce(items('For_each_Approved_Deal')?['fmi_Opportunity']?['fmi_salestype@OData.Community.Display.V1.FormattedValue'], 'Not supplied'),\n  '</td><td>',\n  coalesce(items('For_each_Approved_Deal')?['fmi_Opportunity']?['fmi_salesexecutive']?['fullname'], 'Not supplied'),\n  '</td><td>',\n  coalesce(items('For_each_Approved_Deal')?['fmi_DecisionBy']?['fullname'], 'Not supplied'),\n  '</td><td style=\"text-align:right\">',\n  formatNumber(coalesce(items('For_each_Approved_Deal')?['fmi_submitteddealvalue'], 0), 'N2'),\n  '</td><td>',\n  formatDateTime(items('For_each_Approved_Deal')?['fmi_decisionon'], 'dd MMM yyyy HH:mm', 'en-GB'),\n  '</td></tr>'\n)"
+                          },
+                          "runAfter": {},
+                          "metadata": {
+                            "operationMetadataId": "1102b785-ab69-4a0e-b787-fbfb8a2d83a0"
                           }
                         }
                       },
@@ -438,7 +442,7 @@
                       "metadata": {
                         "operationMetadataId": "84de1a5f-2212-50e9-a79d-16c47af4d907"
                       },
-                      "inputs": "@concat('<p>', string(length(body('List_Approved_Deals')?['value'])), ' deal(s) have been commercially approved since the previous successful digest.</p>', '<p><strong>Reporting period:</strong> ', outputs('Last_Successful_Cutoff_Utc'), ' to ', outputs('Run_Cutoff_Utc'), ' UTC</p>', '<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;font-family:Segoe UI,Arial,sans-serif;font-size:13px\">', '<tr style=\"background:#f2f2f2\"><th>Client</th><th>Deal</th><th>Deal Type</th>', '<th>Sales Executive</th><th>Deal Value (USD)</th><th>Commercially Approved On</th></tr>', variables('EmailRowsHtml'), '</table>')"
+                      "inputs": "@concat('<p>', string(length(body('List_Approved_Deals')?['value'])), ' deal(s) have been commercially approved since the previous successful digest.</p>', '<p><strong>Reporting period:</strong> ', outputs('Last_Successful_Cutoff_Utc'), ' to ', outputs('Run_Cutoff_Utc'), ' UTC</p>', '<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;font-family:Segoe UI,Arial,sans-serif;font-size:13px\">', '<tr style=\"background:#f2f2f2\"><th>Client</th><th>Deal</th><th>Deal Type</th>', '<th>Sales Executive</th><th>Approved By</th><th>Deal Value (USD)</th><th>Commercially Approved On</th></tr>', variables('EmailRowsHtml'), '</table>')"
                     },
                     "Send_Weekly_Commercial_Digest": {
                       "runAfter": {

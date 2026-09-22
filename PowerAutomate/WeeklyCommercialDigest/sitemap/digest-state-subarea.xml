@@ -1,0 +1,12 @@
+<SubArea Id="fmi_DigestState_Admin"
+         Icon="/_imgs/imagestrips/transparent_spacer.gif"
+         Entity="fmi_digeststate"
+         Client="All,Outlook,OutlookLaptopClient,OutlookWorkstationClient,Web"
+         AvailableOffline="false"
+         PassParams="false"
+         Sku="All,OnPremise,Live,SPLA">
+  <Titles>
+    <Title LCID="1033" Title="Digest States" />
+  </Titles>
+  <Privilege Entity="fmi_digeststate" Privilege="Read" />
+</SubArea>

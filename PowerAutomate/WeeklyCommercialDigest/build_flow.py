@@ -112,11 +112,13 @@ row_html = """@concat(
   coalesce(items('For_each_Approved_Deal')?['fmi_Opportunity']?['fmi_salestype@OData.Community.Display.V1.FormattedValue'], 'Not supplied'),
   '</td><td>',
   coalesce(items('For_each_Approved_Deal')?['fmi_Opportunity']?['fmi_salesexecutive']?['fullname'], 'Not supplied'),
+  '</td><td>',
+  coalesce(items('For_each_Approved_Deal')?['fmi_DecisionBy']?['fullname'], 'Not supplied'),
   '</td><td style="text-align:right">',
   formatNumber(coalesce(items('For_each_Approved_Deal')?['fmi_submitteddealvalue'], 0), 'N2'),
   '</td><td>',
   formatDateTime(items('For_each_Approved_Deal')?['fmi_decisionon'], 'dd MMM yyyy HH:mm', 'en-GB'),
-  ' UTC</td></tr>'
+  '</td></tr>'
 )"""
 
 email_body = (
@@ -127,7 +129,7 @@ email_body = (
     "'<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" "
     "style=\"border-collapse:collapse;font-family:Segoe UI,Arial,sans-serif;font-size:13px\">', "
     "'<tr style=\"background:#f2f2f2\"><th>Client</th><th>Deal</th><th>Deal Type</th>', "
-    "'<th>Sales Executive</th><th>Deal Value (USD)</th><th>Commercially Approved On</th></tr>', "
+    "'<th>Sales Executive</th><th>Approved By</th><th>Deal Value (USD)</th><th>Commercially Approved On</th></tr>', "
     "variables('EmailRowsHtml'), '</table>')"
 )
 
@@ -179,6 +181,8 @@ approved_actions = {
             "Append_Approved_Deal_Row": {
                 "type": "AppendToStringVariable",
                 "inputs": {"name": "EmailRowsHtml", "value": row_html},
+                "runAfter": {},
+                "metadata": {"operationMetadataId": "1102b785-ab69-4a0e-b787-fbfb8a2d83a0"},
             }
         },
         "runAfter": {"Reset_Email_Rows_Html": ["Succeeded"]},
@@ -213,7 +217,8 @@ state_valid_actions = {
             "$expand": (
                 "fmi_Opportunity($select=opportunityid,name,fmi_salestype;"
                 "$expand=fmi_salesexecutive($select=fullname)),"
-                "fmi_SubmittedCompany($select=accountid,name)"
+                "fmi_SubmittedCompany($select=accountid,name),"
+                "fmi_DecisionBy($select=fullname)"
             ),
             "$orderby": "fmi_submitteddealvalue desc",
             "$top": 5000,

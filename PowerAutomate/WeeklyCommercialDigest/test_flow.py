@@ -47,6 +47,8 @@ class WeeklyDigestFlowTests(unittest.TestCase):
         self.assertIn("fmi_decisionon le ", query["$filter"])
         self.assertIn("Last_Successful_Cutoff_Utc", query["$filter"])
         self.assertIn("Run_Cutoff_Utc", query["$filter"])
+        self.assertIn("fmi_DecisionBy($select=fullname)", query["$expand"])
+        self.assertNotIn("fmi_Approver($select=fullname)", query["$expand"])
         self.assertEqual(query["$orderby"], "fmi_submitteddealvalue desc")
 
     def test_table_has_requested_deal_fields(self):
@@ -58,6 +60,7 @@ class WeeklyDigestFlowTests(unittest.TestCase):
             "<th>Deal</th>",
             "<th>Deal Type</th>",
             "<th>Sales Executive</th>",
+            "<th>Approved By</th>",
             "<th>Deal Value (USD)</th>",
             "<th>Commercially Approved On</th>",
         )
@@ -66,7 +69,10 @@ class WeeklyDigestFlowTests(unittest.TestCase):
         row = SEND_BRANCH["For_each_Approved_Deal"]["actions"]["Append_Approved_Deal_Row"]["inputs"]["value"]
         self.assertIn("fmi_salestype@OData.Community.Display.V1.FormattedValue", row)
         self.assertIn("['fmi_salesexecutive']?['fullname']", row)
+        self.assertIn("['fmi_DecisionBy']?['fullname']", row)
+        self.assertNotIn("['fmi_Approver']?['fullname']", row)
         self.assertIn("fmi_decisionon", row)
+        self.assertNotIn(" UTC</td>", row)
 
     def test_test_routing_and_comma_separated_production_recipients(self):
         parameters = SEND_BRANCH["Send_Weekly_Commercial_Digest"]["inputs"]["parameters"]
