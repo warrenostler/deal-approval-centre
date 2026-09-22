@@ -50,6 +50,8 @@ class WeeklyDigestFlowTests(unittest.TestCase):
         self.assertEqual(query["$orderby"], "fmi_submitteddealvalue desc")
 
     def test_table_has_requested_deal_fields(self):
+        reset = SEND_BRANCH["Reset_Email_Rows_Html"]["inputs"]
+        self.assertEqual(reset, {"name": "EmailRowsHtml", "value": " "})
         body = SEND_BRANCH["Compose_Email_Body"]["inputs"]
         expected_headers = (
             "<th>Client</th>",

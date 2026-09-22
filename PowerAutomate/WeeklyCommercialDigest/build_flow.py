@@ -171,7 +171,7 @@ approved_actions = {
         "runAfter": {},
         "metadata": metadata(),
         "type": "SetVariable",
-        "inputs": {"name": "EmailRowsHtml", "value": ""},
+        "inputs": {"name": "EmailRowsHtml", "value": " "},
     },
     "For_each_Approved_Deal": {
         "foreach": "@body('List_Approved_Deals')?['value']",

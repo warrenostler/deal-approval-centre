@@ -399,7 +399,7 @@
                       "type": "SetVariable",
                       "inputs": {
                         "name": "EmailRowsHtml",
-                        "value": ""
+                        "value": " "
                       }
                     },
                     "For_each_Approved_Deal": {
