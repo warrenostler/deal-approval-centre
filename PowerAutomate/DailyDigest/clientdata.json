@@ -128,6 +128,9 @@
               "Succeeded"
             ]
           },
+          "metadata": {
+            "operationMetadataId": "244dc15a-6185-47af-be81-87177a09472c"
+          },
           "type": "OpenApiConnection",
           "inputs": {
             "host": {
@@ -144,6 +147,9 @@
         },
         "EmailSendingEnabled_Row": {
           "type": "Compose",
+          "metadata": {
+            "operationMetadataId": "3131cfcb-20b7-428a-a12b-6c3b378efadc"
+          },
           "runAfter": {
             "Read_EmailSendingEnabled": [
               "Succeeded"
@@ -153,6 +159,9 @@
         },
         "EmailSendingEnabled_Value": {
           "type": "Compose",
+          "metadata": {
+            "operationMetadataId": "e1306b90-48ae-4e30-8db2-ed3508e1bc8e"
+          },
           "runAfter": {
             "EmailSendingEnabled_Row": [
               "Succeeded"
@@ -165,6 +174,9 @@
             "EmailSendingEnabled_Value": [
               "Succeeded"
             ]
+          },
+          "metadata": {
+            "operationMetadataId": "112dc678-f144-43a7-9f33-157d097f25e7"
           },
           "type": "OpenApiConnection",
           "inputs": {
@@ -182,6 +194,9 @@
         },
         "IsProductionEnvironment_Row": {
           "type": "Compose",
+          "metadata": {
+            "operationMetadataId": "1713a2cd-1509-4d20-bb72-d21133a1709d"
+          },
           "runAfter": {
             "Read_IsProductionEnvironment": [
               "Succeeded"
@@ -191,6 +206,9 @@
         },
         "IsProductionEnvironment_Value": {
           "type": "Compose",
+          "metadata": {
+            "operationMetadataId": "4f4667e0-a986-4742-8a01-5c662ab43764"
+          },
           "runAfter": {
             "IsProductionEnvironment_Row": [
               "Succeeded"
@@ -203,6 +221,9 @@
             "IsProductionEnvironment_Value": [
               "Succeeded"
             ]
+          },
+          "metadata": {
+            "operationMetadataId": "72335239-4e24-4181-85d5-1cf24b9d8891"
           },
           "type": "OpenApiConnection",
           "inputs": {
@@ -220,6 +241,9 @@
         },
         "TestEmailRecipient_Row": {
           "type": "Compose",
+          "metadata": {
+            "operationMetadataId": "10737b79-179c-4857-889b-6de1f294b856"
+          },
           "runAfter": {
             "Read_TestEmailRecipient": [
               "Succeeded"
@@ -229,6 +253,9 @@
         },
         "TestEmailRecipient_Value": {
           "type": "Compose",
+          "metadata": {
+            "operationMetadataId": "daf45c6b-e601-4a8a-827e-182b67c0170f"
+          },
           "runAfter": {
             "TestEmailRecipient_Row": [
               "Succeeded"
@@ -238,6 +265,9 @@
         },
         "Is_Production": {
           "type": "Compose",
+          "metadata": {
+            "operationMetadataId": "d49b9e32-a7e1-4ba6-9ad3-8988e9efbf66"
+          },
           "runAfter": {
             "TestEmailRecipient_Value": [
               "Succeeded"
@@ -247,6 +277,9 @@
         },
         "If_Email_Sending_Allowed": {
           "type": "If",
+          "metadata": {
+            "operationMetadataId": "d23f14a8-6de7-4b3e-9b60-7877c81ef475"
+          },
           "runAfter": {
             "Is_Production": [
               "Succeeded"
@@ -358,7 +391,8 @@
                           "entityName": "fmi_dealapprovals",
                           "$select": "fmi_dealapprovalid,fmi_submitteddealvalue,createdon",
                           "$filter": "@{concat('fmi_approvalstatus eq 1 and _fmi_approver_value eq ', items('For_each_Recipient'))}",
-                          "$expand": "fmi_Opportunity($select=opportunityid,name),fmi_SubmittedCompany($select=accountid,name)"
+                          "$expand": "fmi_Opportunity($select=opportunityid,name,fmi_salestype;$expand=fmi_salesexecutive($select=fullname)),fmi_SubmittedCompany($select=accountid,name)",
+                          "$orderby": "fmi_submitteddealvalue desc"
                         },
                         "authentication": "@parameters('$authentication')"
                       }
@@ -437,7 +471,7 @@
                           "type": "AppendToStringVariable",
                           "inputs": {
                             "name": "EmailRowsHtml",
-                            "value": "@concat(\r\n  '<tr><td>',\r\n  coalesce(items('For_each_My_Approval')?['fmi_SubmittedCompany']?['name'], 'Not supplied'),\r\n  '</td><td>',\r\n  coalesce(items('For_each_My_Approval')?['fmi_Opportunity']?['name'], 'Unnamed opportunity'),\r\n  '</td><td style=\"text-align:right\">',\r\n  formatNumber(coalesce(items('For_each_My_Approval')?['fmi_submitteddealvalue'], 0), 'N2'),\r\n  '</td><td>',\r\n  string(div(sub(ticks(utcNow()), ticks(items('For_each_My_Approval')?['createdon'])), 864000000000)),\r\n  ' day(s)</td><td style=\"text-align:center\">',\r\n  string(length(body('List_Approval_Items')?['value'])),\r\n  '</td><td style=\"text-align:center\">',\r\n  string(length(body('List_BelowForecast_Items')?['value'])),\r\n  '</td></tr>'\r\n)"
+                            "value": "@concat(\r\n  '<tr><td>',\r\n  coalesce(items('For_each_My_Approval')?['fmi_SubmittedCompany']?['name'], 'Not supplied'),\r\n  '</td><td>',\r\n  coalesce(items('For_each_My_Approval')?['fmi_Opportunity']?['name'], 'Unnamed opportunity'),\r\n  '</td><td>',\r\n  coalesce(items('For_each_My_Approval')?['fmi_Opportunity']?['fmi_salestype@OData.Community.Display.V1.FormattedValue'], 'Not supplied'),\r\n  '</td><td>',\r\n  coalesce(items('For_each_My_Approval')?['fmi_Opportunity']?['fmi_salesexecutive']?['fullname'], 'Not supplied'),\r\n  '</td><td style=\"text-align:right\">',\r\n  formatNumber(coalesce(items('For_each_My_Approval')?['fmi_submitteddealvalue'], 0), 'N2'),\r\n  '</td><td style=\"text-align:center\">',\r\n  string(div(sub(ticks(utcNow()), ticks(items('For_each_My_Approval')?['createdon'])), 864000000000)),\r\n  '</td><td style=\"text-align:center\">',\r\n  string(length(body('List_Approval_Items')?['value'])),\r\n  '</td><td style=\"text-align:center\">',\r\n  string(length(body('List_BelowForecast_Items')?['value'])),\r\n  '</td></tr>'\r\n)"
                           }
                         }
                       },
@@ -466,7 +500,7 @@
                         "operationMetadataId": "dbd13f2e-4640-4222-b5e9-c9cd22357aad"
                       },
                       "type": "Compose",
-                      "inputs": "@concat('<p>You have ', string(length(body('List_My_Pending_Approvals')?['value'])), ' Deal Approval(s) awaiting your action.</p><table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;font-family:Segoe UI,Arial,sans-serif;font-size:13px\"><tr style=\"background:#f2f2f2\"><th>Company</th><th>Deal</th><th>Submitted Value</th><th>Age</th><th>Items</th><th>Below Forecast</th></tr>', variables('EmailRowsHtml'), '</table><p style=\"margin-top:16px\"><a href=\"', variables('ApprovalCentreUrl'), '\">Open the Approval Centre</a> to review and action these approvals.</p>')"
+                      "inputs": "@concat('<p>You have ', string(length(body('List_My_Pending_Approvals')?['value'])), ' Deal Approval(s) awaiting your action.</p><table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;font-family:Segoe UI,Arial,sans-serif;font-size:13px\"><tr style=\"background:#f2f2f2\"><th>Company</th><th>Deal</th><th>Deal Type</th><th>Sales Executive</th><th>Deal Value (USD)</th><th>Days Pending Approval</th><th>Items</th><th>Below Forecast</th></tr>', variables('EmailRowsHtml'), '</table><p style=\"margin-top:16px\"><a href=\"', variables('ApprovalCentreUrl'), '\">Open the Approval Centre</a> to review and action these approvals.</p>')"
                     },
                     "Send_an_email_V2": {
                       "runAfter": {

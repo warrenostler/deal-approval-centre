@@ -161,6 +161,26 @@ class RoutingTests(unittest.TestCase):
         self.assertEqual(found, ["Send_an_email_V2"])
         self.assertNotIn("List_Pending_Deal_Approvals", ACTIONS)
 
+    def test_digest_query_orders_value_descending_and_expands_new_columns(self):
+        recipient_actions = GATE["actions"]["If_Any_Pending_Approvals"]["actions"]["For_each_Recipient"]["actions"]
+        query = recipient_actions["List_My_Pending_Approvals"]["inputs"]["parameters"]
+        self.assertEqual(query["$orderby"], "fmi_submitteddealvalue desc")
+        self.assertIn("fmi_salestype", query["$expand"])
+        self.assertIn("fmi_salesexecutive($select=fullname)", query["$expand"])
+
+    def test_digest_table_contains_requested_headers_and_row_values(self):
+        recipient_actions = GATE["actions"]["If_Any_Pending_Approvals"]["actions"]["For_each_Recipient"]["actions"]
+        headers = recipient_actions["Compose_Email_Body"]["inputs"]
+        expected = (
+            "<th>Company</th><th>Deal</th><th>Deal Type</th><th>Sales Executive</th>"
+            "<th>Deal Value (USD)</th><th>Days Pending Approval</th><th>Items</th><th>Below Forecast</th>"
+        )
+        self.assertIn(expected, headers)
+        row = recipient_actions["For_each_My_Approval"]["actions"]["Append_to_string_variable"]["inputs"]["value"]
+        self.assertIn("fmi_salestype@OData.Community.Display.V1.FormattedValue", row)
+        self.assertIn("['fmi_salesexecutive']?['fullname']", row)
+        self.assertNotIn(" day(s)", row)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
